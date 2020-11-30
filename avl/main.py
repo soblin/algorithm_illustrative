@@ -50,6 +50,54 @@ class AVLTree:
 
         return
 
+    def delete(self, query):
+        node = self.root
+        while node is not None:
+            if node.val > query:
+                node = node.left
+            elif node.val == query:
+                break
+            else:
+                node = node.right
+
+        if node is None:
+            # not found
+            return
+
+        if node.left is None and node.right is None:
+            if node.attr == "left_child": node.parent.left = None
+            else: node.parent.right = None
+
+        elif node.right is None:
+            # only left is None
+            if node.attr == "left_child":
+                node.parent.left = node.left
+            else:
+                node.parent.right = node.left
+                node.left.attr = "right_child"
+
+        elif node.left is None:
+            # only right is None
+            if node.attr == "left_child":
+                node.parent.left = node.right
+                node.right.attr = "left_child"
+            else:
+                node.parent.right  = node.right
+
+        else:
+            suc = self.getSuccessor(node)
+            node.val = suc.val
+            suc.parent.left = None
+
+    def getSuccessor(self, node_):
+        parent = None
+        node = node_
+        while node is not None:
+            parent = node
+            node = node.left
+
+        return parent
+    
     def view(self):
         g = graphviz.Graph()
         queue = deque()
@@ -80,3 +128,6 @@ if __name__ == '__main__':
         tree.insert(val)
     
     tree.view()
+
+    # tree.delete(12)
+    # tree.view()
