@@ -84,19 +84,16 @@ class PureBinaryTree(object):
         node.parent = lnode
 
         if node is self.root:
-            # 3
             self.root = lnode
             self.root.parent = None
             return self.root
         
         elif is_left:
-            # 3
             lnode.parent = parent
             parent.left = lnode
             return lnode
         
         else:
-            # 3
             lnode.parent = parent
             parent.right = lnode
             return lnode
@@ -147,10 +144,10 @@ class PureBinaryTree(object):
             if self.isLeaf(node):
                 g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val), shape='square')
             else:
-                if not self.isRoot(node):
-                    g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val))
-                else:
+                if self.isRoot(node):
                     g.node(str(node.viz_id), label="{0}".format(node.val))
+                else:
+                    g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val))
 
             # add edge
             if node.left is not None:
@@ -209,14 +206,7 @@ class BinaryTree(PureBinaryTree):
         return
 
     def _delete(self, query):
-        node = self.root
-        while node is not None:
-            if node.val > query:
-                node = node.left
-            elif node.val == query:
-                break
-            else:
-                node = node.right
+        node = self.find(query)
 
         if node is None:
             # not found
@@ -227,14 +217,14 @@ class BinaryTree(PureBinaryTree):
             else: node.parent.right = None
 
         elif node.right is None:
-            # only left is None
+            # only left child
             if self.isLeft(node):
                 node.parent.left = node.left
             else:
                 node.parent.right = node.left
 
         elif node.left is None:
-            # only right is None
+            # only right child
             if self.isLeft(node):
                 node.parent.left = node.right
             else:
@@ -266,7 +256,6 @@ class AVLTree(PureBinaryTree):
             else:
                 parent = node
                 node = node.right
-
 
         node = Node(x)
         if x <= parent.val:
@@ -300,14 +289,14 @@ class AVLTree(PureBinaryTree):
                     # LL
                     node = self.rotateR(pnode)
                     node.balance = 0
-                    pnode.balance = 0
+                    node.right.balance = 0
                 break
             elif pnode.balance == -2:
                 if pnode.right.balance == -1:
                     # RR
                     node = self.rotateL(pnode)
-                    pnode.balance = 0
                     node.balance = 0
+                    node.left.balance = 0
                 elif pnode.right.balance == 1:
                     # RL
                     pnode.right = self.rotateR(pnode.left)
@@ -319,14 +308,15 @@ class AVLTree(PureBinaryTree):
 
     def updateBalance(self, node):
         if node.balance == 1:
+            node.left.balance = 0
             node.right.balance = -1
-            node.left.balance = 0
         elif node.balance == -1:
-            node.right.balance = 0
             node.left.balance = 1
-        else:
             node.right.balance = 0
+        else:
             node.left.balance = 0
+            node.right.balance = 0
+        
         node.balance = 0
     
 if __name__ == '__main__':
