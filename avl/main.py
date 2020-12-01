@@ -11,6 +11,7 @@ class Node:
         self.right = None
         self.parent = None
         self.viz_id = None
+        self.balance = 0
 
 class PureBinaryTree(object):
     def __init__(self):
@@ -67,8 +68,8 @@ class PureBinaryTree(object):
     def rotateR(self, node):
         if node is None:
             raise IndexError("rotateR must not be used for None node")
-        if node.left is None or node.right is None:
-            raise IndexError("node.left and node.right must not be None")
+        if node.left is None:
+            raise IndexError("node.left must not be None in rotateR")
         
         parent = node.parent
         lnode = node.left
@@ -86,22 +87,25 @@ class PureBinaryTree(object):
             # 3
             self.root = lnode
             self.root.parent = None
+            return self.root
         
         elif is_left:
             # 3
             lnode.parent = parent
             parent.left = lnode
+            return lnode
         
         else:
             # 3
             lnode.parent = parent
             parent.right = lnode
-
+            return lnode
+        
     def rotateL(self, node):
         if node is None:
             raise IndexError("rotateR must not be used for None node")
-        if node.left is None or node.right is None:
-            raise IndexError("node.left and node.right must not be None")
+        if node.right is None:
+            raise IndexError("node.right must not be None in rotateL")
         
         parent = node.parent
         rnode = node.right
@@ -118,15 +122,17 @@ class PureBinaryTree(object):
         if node is self.root:
             self.root = rnode
             self.root.parent = None
-
+            return self.root
+        
         elif is_left:
             rnode.parent = parent
             parent.left = rnode
-
+            return rnode
+        
         else:
             rnode.parent = parent
             parent.right = rnode
-    
+            return rnode
         
     def view(self):
         g = graphviz.Graph()
@@ -246,8 +252,85 @@ class AVLTree(PureBinaryTree):
     def _insert(self, x):
         pass
 
+    def _insert(self, x):
+        if self.root is None:
+            self.root = Node(x)
+            return
+
+        node = self.root
+        parent = None
+        while node is not None:
+            if x <= node.val:
+                parent = node
+                node = node.left
+            else:
+                parent = node
+                node = node.right
+
+
+        node = Node(x)
+        if x <= parent.val:
+            node.parent = parent
+            parent.left = node
+        else:
+            node.parent = parent
+            parent.right = node
+
+        self.rebalance(node)
+
+    def rebalance(self, new_node):
+        node = new_node
+        while node.parent is not None:
+            pnode = node.parent
+            if self.isLeft(node):
+                pnode.balance += 1
+            else:
+                pnode.balance -= 1
+
+            if pnode.balance is 0:
+                return
+
+            if pnode.balance == 2:
+                if pnode.left.balance == -1:
+                    # LR
+                    pnode.left = self.rotateL(pnode.left)
+                    node = self.rotateR(pnode)
+                    self.updateBalance(node)
+                elif pnode.left.balance == 1:
+                    # LL
+                    node = self.rotateR(pnode)
+                    node.balance = 0
+                    pnode.balance = 0
+                break
+            elif pnode.balance == -2:
+                if pnode.right.balance == -1:
+                    # RR
+                    node = self.rotateL(pnode)
+                    pnode.balance = 0
+                    node.balance = 0
+                elif pnode.right.balance == 1:
+                    # RL
+                    pnode.right = self.rotateR(pnode.left)
+                    node = self.rotateL(pnode)
+                    self.updateBalance(node)
+                break
+
+            node = pnode
+
+    def updateBalance(self, node):
+        if node.balance == 1:
+            node.right.balance = -1
+            node.left.balance = 0
+        elif node.balance == -1:
+            node.right.balance = 0
+            node.left.balance = 1
+        else:
+            node.right.balance = 0
+            node.left.balance = 0
+        node.balance = 0
+    
 if __name__ == '__main__':
-    tree = BinaryTree()
+    tree = AVLTree()
     values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12]
     for val in values:
         tree.insert(val)
