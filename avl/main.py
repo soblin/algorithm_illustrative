@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import graphviz
 from collections import deque
+import sys
+input = sys.stdin.readline
 
 class Node:
     def __init__(self, val):
@@ -220,4 +222,30 @@ if __name__ == '__main__':
         tree.insert(val)
     
     # tree.delete(12)
-    tree.view()
+    print("""
+    > type 'insert x' or 'rotateR x' or 'view'. type q to quit.
+    """)
+
+    while True:
+        inputs = list(input().split())
+        if len(inputs) == 1:
+            cmd = str(inputs[0])
+            if cmd == 'q':
+                exit()
+            elif cmd == "view":
+                tree.view()
+            else:
+                print("type 'q' or 'view'")
+        elif len(inputs) == 2:
+            cmd = str(inputs[0])
+            x = int(inputs[1])
+            if cmd == "insert":
+                print("run insert({0})".format(x))
+                tree.insert(x)
+            elif cmd == "rotateR":
+                print("run rotateR({0})".format(x))
+                tree.rotateR(tree.find(x))
+            else:
+                print("type 'insert x' or 'rotateR x'")
+    
+    
