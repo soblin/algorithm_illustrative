@@ -8,21 +8,144 @@ class Node:
         self.left = None
         self.right = None
         self.parent = None
-        self.attr = None
         self.viz_id = None
-        
-class AVLTree:
+
+class PureBinaryTree(object):
     def __init__(self):
         self.root = None
-        self.nodes = [] # cached the reference to nodes
- 
+
+    def isLeaf(self, node):
+        return node.left is None and node.right is None
+
+    def isRoot(self, node):
+        return node.parent is None
+
+    def isLeft(self, node):
+        parent = node.parent
+        if parent is None:
+            return None
+        if node.val <= parent.val:
+            return True
+        else:
+            return False
+    
     def insert(self, x):
-        """
-        allow duplicate id node
-        """
+        if not hasattr(self, "_insert"):
+            raise NotImplementedError("insert cannot be called")
+
+        return self._insert(x)
+
+    def delete(self, x):
+        if not hasattr(self, "_delete"):
+            raise NotImplementedError("delete cannot be called")
+
+        return self._delete(x)
+
+    def find(self, x):
+        node = self.root
+        while node is not None:
+            if node.val == x:
+                return node
+            if x <= node.val:
+                node = node.left
+            else:
+                node = node.right
+
+        return None
+    
+    def getSuccessor(self, node_):
+        parent = None
+        node = node_
+        while node is not None:
+            parent = node
+            node = node.left
+
+        return parent
+
+    def rotateR(self, node):
+        if node is None:
+            raise IndexError("rotateR must not be used for None node")
+        if node.left is None or node.right is None:
+            raise IndexError("node.left and node.right must not be None")
+        
+        parent = node.parent
+        lnode = node.left
+        lrnode = lnode.right
+        is_left = self.isLeft(node)
+        # 1
+        node.left = lrnode
+        if lrnode:
+            lrnode.parent = node
+        # 2
+        lnode.right = node
+        node.parent = lnode
+
+        if node is self.root:
+            # 3
+            self.root = lnode
+            self.root.parent = None
+        
+        elif is_left:
+            # 3
+            lnode.parent = parent
+            parent.left = lnode
+        
+        else:
+            # 3
+            lnode.parent = parent
+            parent.right = lnode
+    
+    def view(self):
+        g = graphviz.Graph()
+        queue = deque()
+        viz_index = 0
+        self.root.viz_id = viz_index
+        queue.append(self.root)
+        # BFS
+        while len(queue) is not 0:
+            node = queue.pop()
+            # visualize node
+            if self.isLeaf(node):
+                g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val), shape='square')
+            else:
+                if not self.isRoot(node):
+                    g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val))
+                else:
+                    g.node(str(node.viz_id), label="{0}".format(node.val))
+
+            # add edge
+            if node.left is not None:
+                viz_index += 1
+                node.left.viz_id = viz_index
+                queue.append(node.left)
+                g.edge(str(node.viz_id), str(node.left.viz_id))
+                # add empty for better visualization
+                if node.right is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index))
+                    
+            if node.right is not None:
+                # add empty for better visualization
+                if node.left is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index))
+                
+                viz_index += 1
+                node.right.viz_id = viz_index
+                queue.append(node.right)
+                g.edge(str(node.viz_id), str(node.right.viz_id))
+        
+        g.view()
+
+class BinaryTree(PureBinaryTree):
+    def __init__(self):
+        super().__init__()
+ 
+    def _insert(self, x):
         if self.root is None:
             self.root = Node(x)
-            self.nodes.append(self.root)
             return
 
         node = self.root
@@ -38,19 +161,15 @@ class AVLTree:
         if x <= parent.val:
             node = Node(x)
             node.parent = parent
-            node.attr = "left_child"
             parent.left = node
-            self.nodes.append(node)
         else:
             node = Node(x)
             node.parent = parent
-            node.attr = "right_child"
             parent.right = node
-            self.nodes.append(node)
 
         return
 
-    def delete(self, query):
+    def _delete(self, query):
         node = self.root
         while node is not None:
             if node.val > query:
@@ -65,22 +184,20 @@ class AVLTree:
             return
 
         if node.left is None and node.right is None:
-            if node.attr == "left_child": node.parent.left = None
+            if self.isLeft(node): node.parent.left = None
             else: node.parent.right = None
 
         elif node.right is None:
             # only left is None
-            if node.attr == "left_child":
+            if self.isLeft(node):
                 node.parent.left = node.left
             else:
                 node.parent.right = node.left
-                node.left.attr = "right_child"
 
         elif node.left is None:
             # only right is None
-            if node.attr == "left_child":
+            if self.isLeft(node):
                 node.parent.left = node.right
-                node.right.attr = "left_child"
             else:
                 node.parent.right  = node.right
 
@@ -89,45 +206,18 @@ class AVLTree:
             node.val = suc.val
             suc.parent.left = None
 
-    def getSuccessor(self, node_):
-        parent = None
-        node = node_
-        while node is not None:
-            parent = node
-            node = node.left
-
-        return parent
-    
-    def view(self):
-        g = graphviz.Graph()
-        queue = deque()
-        viz_index = 0
-        self.root.viz_id = viz_index
-        queue.append(self.root)
-        while len(queue) is not 0:
-            node = queue.pop()
-            g.node(str(node.viz_id), label="{0}".format(node.val))
-            if node.left is not None:
-                viz_index += 1
-                node.left.viz_id = viz_index
-                queue.append(node.left)
-                g.edge(str(node.viz_id), str(node.left.viz_id))
-
-            if node.right is not None:
-                viz_index += 1
-                node.right.viz_id = viz_index
-                queue.append(node.right)
-                g.edge(str(node.viz_id), str(node.right.viz_id))
-
-        g.view()
+class AVLTree(PureBinaryTree):
+    def __init__(self):
+        super().__init__()
+ 
+    def _insert(self, x):
+        pass
 
 if __name__ == '__main__':
-    tree = AVLTree()
-    values = [7, 10, 11, 5, 3, 6, 1, 4, 13, 25, 12]
+    tree = BinaryTree()
+    values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12]
     for val in values:
         tree.insert(val)
     
-    tree.view()
-
     # tree.delete(12)
-    # tree.view()
+    tree.view()
