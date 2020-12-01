@@ -96,7 +96,38 @@ class PureBinaryTree(object):
             # 3
             lnode.parent = parent
             parent.right = lnode
+
+    def rotateL(self, node):
+        if node is None:
+            raise IndexError("rotateR must not be used for None node")
+        if node.left is None or node.right is None:
+            raise IndexError("node.left and node.right must not be None")
+        
+        parent = node.parent
+        rnode = node.right
+        rlnode = rnode.left
+        is_left = self.isLeft(node)
+        # 1
+        node.right = rlnode
+        if rlnode:
+            rlnode.parent = node
+        # 2
+        rnode.left = node
+        node.parent = rnode
+
+        if node is self.root:
+            self.root = rnode
+            self.root.parent = None
+
+        elif is_left:
+            rnode.parent = parent
+            parent.left = rnode
+
+        else:
+            rnode.parent = parent
+            parent.right = rnode
     
+        
     def view(self):
         g = graphviz.Graph()
         queue = deque()
@@ -222,11 +253,10 @@ if __name__ == '__main__':
         tree.insert(val)
     
     # tree.delete(12)
-    print("""
-    > type 'insert x' or 'rotateR x' or 'view'. type q to quit.
-    """)
+    print("type 'insert x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
     while True:
+        print(">", end="")
         inputs = list(input().split())
         if len(inputs) == 1:
             cmd = str(inputs[0])
@@ -245,7 +275,10 @@ if __name__ == '__main__':
             elif cmd == "rotateR":
                 print("run rotateR({0})".format(x))
                 tree.rotateR(tree.find(x))
+            elif cmd == "rotateL":
+                print("run rotateL({0})".format(x))
+                tree.rotateL(tree.find(x))
             else:
-                print("type 'insert x' or 'rotateR x'")
+                print("type 'insert x' or 'rotateR x' or 'rotateL x")
     
     
