@@ -253,10 +253,9 @@ if __name__ == '__main__':
         tree.insert(val)
     
     # tree.delete(12)
-    print("type 'insert x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
+    print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
     while True:
-        print(">", end="")
         inputs = list(input().split())
         if len(inputs) == 1:
             cmd = str(inputs[0])
@@ -272,6 +271,9 @@ if __name__ == '__main__':
             if cmd == "insert":
                 print("run insert({0})".format(x))
                 tree.insert(x)
+            elif cmd == "delete":
+                print("run delete({0})".format(x))
+                tree.delete(x)
             elif cmd == "rotateR":
                 print("run rotateR({0})".format(x))
                 tree.rotateR(tree.find(x))
