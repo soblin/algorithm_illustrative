@@ -142,12 +142,12 @@ class PureBinaryTree(object):
             node = queue.pop()
             # visualize node
             if self.isLeaf(node):
-                g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val), shape='square')
+                g.node(str(node.viz_id), label="{0}({1})[{2}]".format(node.val, node.parent.val, node.balance), shape='square')
             else:
                 if self.isRoot(node):
-                    g.node(str(node.viz_id), label="{0}".format(node.val))
+                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance))
                 else:
-                    g.node(str(node.viz_id), label="{0}({1})".format(node.val, node.parent.val))
+                    g.node(str(node.viz_id), label="{0}({1})[{2}]".format(node.val, node.parent.val, node.balance))
 
             # add edge
             if node.left is not None:
@@ -340,6 +340,7 @@ class AVLTree(PureBinaryTree):
         if to_remove is None:
             return
 
+        to_balance = None
         if to_remove.left is not None and to_remove.right is not None:
             # two children
             suc = self.getSuccessor(to_remove)
@@ -349,45 +350,50 @@ class AVLTree(PureBinaryTree):
                 to_remove.right = suc.right
                 if suc.right:
                     to_remove.right.parent = to_remove
-                to_remove = suc
+                to_balance = to_remove.right
             else:
                 suc.parent.left = None
-                to_remove = suc
+                to_balance = suc
         elif to_remove.left is not None:
             # only left
             if self.isRoot(to_remove):
                 self.root = to_remove.left
                 self.root.parent = None
+                return
             elif self.isLeft(to_remove):
                 to_remove.parent.left = to_remove.left
-                if to_remove.left:
-                    to_remove.left.parent = to_remove.parent
+                to_remove.left.parent = to_remove.parent
+                to_balance = to_remove.left
             else:
                 to_remove.parent.right = to_remove.left
-                if to_remove.left:
-                    to_remove.left.parent = to_remove.parent
+                to_remove.left.parent = to_remove.parent
+                to_balance = to_remove.left
         elif to_remove.right is not None:
             # only right
             if self.isRoot(to_remove):
                 self.root = to_remove.right
                 self.root.parent = None
+                return
             elif self.isLeft(to_remove):
                 to_remove.parent.left = to_remove.right
-                if to_remove.right:
-                    to_remove.right.parent = to_remove.parent
+                to_remove.right.parent = to_remove.parent
+                to_balance = to_remove.right
             else:
                 to_remove.parent.right = to_remove.right
-                if to_remove.right:
-                    to_remove.right.parent = to_remove.parent
+                to_remove.right.parent = to_remove.parent
+                to_balance = to_remove.right
         else:
             if self.isRoot(to_remove):
                 self.root = None
+                return
             elif self.isLeft(to_remove):
                 to_remove.parent.left = None
+                to_balance = to_remove
             else:
                 to_remove.parent.right = None
+                to_balance = to_remove
                 
-        # self.rebalanceDelete(to_remove)
+        self.rebalanceDelete(to_balance)
 
     def rebalanceDelete(self, removed):
         node = removed
@@ -402,6 +408,7 @@ class AVLTree(PureBinaryTree):
                 return
 
             if pnode.balance is -2:
+                print("pnode.balance is -2")
                 if pnode.right.balance is 0:
                     top = self.rotateL(pnode)
                     top.balance = 1
@@ -417,6 +424,7 @@ class AVLTree(PureBinaryTree):
                 break
             
             if pnode.balance is 2:
+                print("pnode.balance is 2")
                 if pnode.left.balance is 0:
                     top = self.rotateR(pnode)
                     top.balance = -1
@@ -435,7 +443,7 @@ class AVLTree(PureBinaryTree):
         return
         
 if __name__ == '__main__':
-    tree = BinaryTree()
+    tree = AVLTree()
     values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12]
     for val in values:
         tree.insert(val)
