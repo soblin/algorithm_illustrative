@@ -39,6 +39,12 @@ class PureBinaryTree(object):
 
         return self._insert(x)
 
+    def view(self):
+        if not hasattr(self, "_view"):
+            raise NotImplementedError("insert cannot be called")
+
+        return self._view()
+
     def delete(self, x):
         if not hasattr(self, "_delete"):
             raise NotImplementedError("delete cannot be called")
@@ -135,51 +141,7 @@ class PureBinaryTree(object):
             rnode.parent = parent
             parent.right = rnode
             return rnode
-        
-    def view(self):
-        g = graphviz.Digraph()
-        queue = deque()
-        viz_index = 0
-        self.root.viz_id = viz_index
-        queue.append(self.root)
-        # BFS
-        while len(queue) is not 0:
-            node = queue.pop()
-            # visualize node
-            if self.isLeaf(node):
-                g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance), shape='square')
-            else:
-                if self.isRoot(node):
-                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance), shape="triangle")
-                else:
-                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance))
-
-            # add edge
-            if node.left is not None:
-                viz_index += 1
-                node.left.viz_id = viz_index
-                queue.append(node.left)
-                g.edge(str(node.viz_id), str(node.left.viz_id), label=str(node.val))
-                # add empty for better visualization
-                if node.right is None:
-                    viz_index += 1
-                    g.node(str(viz_index), shape="point")
-                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
-                    
-            if node.right is not None:
-                # add empty for better visualization
-                if node.left is None:
-                    viz_index += 1
-                    g.node(str(viz_index), shape="point")
-                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
-                
-                viz_index += 1
-                node.right.viz_id = viz_index
-                queue.append(node.right)
-                g.edge(str(node.viz_id), str(node.right.viz_id), label=str(node.val))
-        
-        g.view()
-
+    
 class BinaryTree(PureBinaryTree):
     def __init__(self):
         super().__init__()
@@ -256,6 +218,50 @@ class BinaryTree(PureBinaryTree):
                 suc.parent.left = suc.right
                 if suc.parent.left:
                     suc.parent.left.parent = suc.parent
+
+    def _view(self):
+        g = graphviz.Digraph()
+        queue = deque()
+        viz_index = 0
+        self.root.viz_id = viz_index
+        queue.append(self.root)
+        # BFS
+        while len(queue) is not 0:
+            node = queue.pop()
+            # visualize node
+            if self.isLeaf(node):
+                g.node(str(node.viz_id), label="{0}".format(node.val), shape='square')
+            else:
+                if self.isRoot(node):
+                    g.node(str(node.viz_id), label="{0}".format(node.val), shape="triangle")
+                else:
+                    g.node(str(node.viz_id), label="{0}".format(node.val))
+
+            # add edge
+            if node.left is not None:
+                viz_index += 1
+                node.left.viz_id = viz_index
+                queue.append(node.left)
+                g.edge(str(node.viz_id), str(node.left.viz_id), label=str(node.val))
+                # add empty for better visualization
+                if node.right is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                    
+            if node.right is not None:
+                # add empty for better visualization
+                if node.left is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                
+                viz_index += 1
+                node.right.viz_id = viz_index
+                queue.append(node.right)
+                g.edge(str(node.viz_id), str(node.right.viz_id), label=str(node.val))
+        
+        g.view()
 
 class AVLTree(PureBinaryTree):
     def __init__(self):
@@ -453,10 +459,55 @@ class AVLTree(PureBinaryTree):
                     node = top
             else:
                 node = pnode
+
+    def _view(self):
+        g = graphviz.Digraph()
+        queue = deque()
+        viz_index = 0
+        self.root.viz_id = viz_index
+        queue.append(self.root)
+        # BFS
+        while len(queue) is not 0:
+            node = queue.pop()
+            # visualize node
+            if self.isLeaf(node):
+                g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance), shape='square')
+            else:
+                if self.isRoot(node):
+                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance), shape="triangle")
+                else:
+                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance))
+
+            # add edge
+            if node.left is not None:
+                viz_index += 1
+                node.left.viz_id = viz_index
+                queue.append(node.left)
+                g.edge(str(node.viz_id), str(node.left.viz_id), label=str(node.val))
+                # add empty for better visualization
+                if node.right is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                    
+            if node.right is not None:
+                # add empty for better visualization
+                if node.left is None:
+                    viz_index += 1
+                    g.node(str(viz_index), shape="point")
+                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                
+                viz_index += 1
+                node.right.viz_id = viz_index
+                queue.append(node.right)
+                g.edge(str(node.viz_id), str(node.right.viz_id), label=str(node.val))
         
+        g.view()
+
 if __name__ == '__main__':
+    # tree = BinaryTree()
     tree = AVLTree()
-    values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12]
+    values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12, 15, 20, 30, 40]
     for val in values:
         tree.insert(val)
     
