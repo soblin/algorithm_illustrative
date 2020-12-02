@@ -213,12 +213,16 @@ class BinaryTree(PureBinaryTree):
             return
 
         if node.left is None and node.right is None:
-            if self.isLeft(node): node.parent.left = None
+            if self.isRoot(node): self.root = None
+            elif self.isLeft(node): node.parent.left = None
             else: node.parent.right = None
 
         elif node.right is None:
             # only left child
-            if self.isLeft(node):
+            if self.isRoot(node):
+                self.root = node.left
+                self.root.parent = None
+            elif self.isLeft(node):
                 node.parent.left = node.left
                 node.left.parent = node.parent
             else:
@@ -226,7 +230,10 @@ class BinaryTree(PureBinaryTree):
                 node.left.parent = node.parent
         elif node.left is None:
             # only right child
-            if self.isLeft(node):
+            if self.isRoot(node):
+                self.root = node.right
+                self.root.parent = None
+            elif self.isLeft(node):
                 node.parent.left = node.right
                 node.right.parent = node.parent
             else:
@@ -237,7 +244,8 @@ class BinaryTree(PureBinaryTree):
             if suc is node.right:
                 node.val = suc.val
                 node.right = suc.right
-                node.right.parent = node
+                if suc.right:
+                    node.right.parent = node
             else:
                 node.val = suc.val
                 suc.parent.left = None
@@ -332,41 +340,54 @@ class AVLTree(PureBinaryTree):
         if to_remove is None:
             return
 
-        if to_remove.parent is None:
-            self.root = None
-            return
-        
         if to_remove.left is not None and to_remove.right is not None:
             # two children
             suc = self.getSuccessor(to_remove)
             to_remove.val = suc.val
-            if suc is to_remove.left:
-                node.val = suc.val
-                node.right = suc.right
-                node.right.parent = node.right
+            if suc is to_remove.right:
+                to_remove.val = suc.val
+                to_remove.right = suc.right
+                if suc.right:
+                    to_remove.right.parent = to_remove
                 to_remove = suc
             else:
                 suc.parent.left = None
                 to_remove = suc
         elif to_remove.left is not None:
             # only left
-            if self.isLeft(to_remove):
+            if self.isRoot(to_remove):
+                self.root = to_remove.left
+                self.root.parent = None
+            elif self.isLeft(to_remove):
                 to_remove.parent.left = to_remove.left
+                if to_remove.left:
+                    to_remove.left.parent = to_remove.parent
             else:
                 to_remove.parent.right = to_remove.left
+                if to_remove.left:
+                    to_remove.left.parent = to_remove.parent
         elif to_remove.right is not None:
             # only right
-            if self.isLeft(to_remove):
+            if self.isRoot(to_remove):
+                self.root = to_remove.right
+                self.root.parent = None
+            elif self.isLeft(to_remove):
                 to_remove.parent.left = to_remove.right
+                if to_remove.right:
+                    to_remove.right.parent = to_remove.parent
             else:
                 to_remove.parent.right = to_remove.right
+                if to_remove.right:
+                    to_remove.right.parent = to_remove.parent
         else:
-            if self.isLeft(to_remove):
+            if self.isRoot(to_remove):
+                self.root = None
+            elif self.isLeft(to_remove):
                 to_remove.parent.left = None
             else:
                 to_remove.parent.right = None
                 
-        self.rebalanceDelete(to_remove)
+        # self.rebalanceDelete(to_remove)
 
     def rebalanceDelete(self, removed):
         node = removed
