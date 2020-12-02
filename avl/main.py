@@ -58,7 +58,7 @@ class PureBinaryTree(object):
     
     def getSuccessor(self, node_):
         parent = None
-        node = node_
+        node = node_.right
         while node is not None:
             parent = node
             node = node.left
@@ -220,20 +220,27 @@ class BinaryTree(PureBinaryTree):
             # only left child
             if self.isLeft(node):
                 node.parent.left = node.left
+                node.left.parent = node.parent
             else:
                 node.parent.right = node.left
-
+                node.left.parent = node.parent
         elif node.left is None:
             # only right child
             if self.isLeft(node):
                 node.parent.left = node.right
+                node.right.parent = node.parent
             else:
                 node.parent.right  = node.right
-
+                node.right.parent = node.parent
         else:
             suc = self.getSuccessor(node)
-            node.val = suc.val
-            suc.parent.left = None
+            if suc is node.right:
+                node.val = suc.val
+                node.right = suc.right
+                node.right.parent = node
+            else:
+                node.val = suc.val
+                suc.parent.left = None
 
 class AVLTree(PureBinaryTree):
     def __init__(self):
@@ -265,9 +272,9 @@ class AVLTree(PureBinaryTree):
             node.parent = parent
             parent.right = node
 
-        self.rebalance(node)
+        self.rebalanceInsert(node)
 
-    def rebalance(self, new_node):
+    def rebalanceInsert(self, new_node):
         node = new_node
         while node.parent is not None:
             pnode = node.parent
@@ -318,9 +325,86 @@ class AVLTree(PureBinaryTree):
             node.right.balance = 0
         
         node.balance = 0
-    
+
+    def _delete(self, query):
+        to_remove = self.find(query)
+
+        if to_remove is None:
+            return
+
+        if to_remove.parent is None:
+            self.root = None
+            return
+        
+        if to_remove.left is not None and to_remove.right is not None:
+            # two children
+            suc = self.getSuccessor(to_remove)
+            to_remove.val = suc.val
+            to_remove = suc
+        elif to_remove.left is not None:
+            # only left
+            to_remove.val = to_remove.left.val
+            to_remove = to_remove.left
+        elif to_remove.right is not None:
+            # only right
+            to_remove.val = to_remove.right.val
+            to_remove = to_remove.right
+            
+        pnode = to_remove.parent
+        if self.isLeft(to_remove):
+            pnode.left = None
+        else:
+            pnode.right = None
+
+        self.rebalanceDelete(to_remove)
+
+    def rebalanceDelete(self, removed):
+        node = removed
+        while node.parent is not None:
+            pnode = node.parent
+            if self.isLeft(node):
+                pnode.balance -= 1
+            else:
+                pnode.balance += 1
+
+            if pnode.balance is 1 or -1:
+                return
+
+            if pnode.balance is -2:
+                if pnode.right.balance is 0:
+                    top = self.rotateL(pnode)
+                    top.balance = 1
+                    top.left.balance = -1
+                elif pnode.right.balance is -1:
+                    top = self.rotateL(pnode)
+                    top.balance = 0
+                    top.left.balance = 0
+                elif pnode.right.balance is 1:
+                    pnode.right = self.rotateR(pnode.right)
+                    top = self.rotateL(pnode)
+                    self.updateBalance(top)
+                break
+            
+            if pnode.balance is 2:
+                if pnode.left.balance is 0:
+                    top = self.rotateR(pnode)
+                    top.balance = -1
+                    top.right.balance = 1
+                elif pnode.left.balance is 1:
+                    top = self.rotateR(pnode)
+                    top.balance = 0
+                    top.right.balance = 0
+                elif pnode.left.balance is -1:
+                    pnode.left = self.rotateL(pnode.left)
+                    top = self.rotateR(pnode)
+                    self.updateBalance(top)
+                break
+            
+            node = pnode
+        return
+        
 if __name__ == '__main__':
-    tree = AVLTree()
+    tree = BinaryTree()
     values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12]
     for val in values:
         tree.insert(val)
