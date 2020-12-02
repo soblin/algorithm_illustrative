@@ -145,7 +145,7 @@ class PureBinaryTree(object):
                 g.node(str(node.viz_id), label="{0}({1})[{2}]".format(node.val, node.parent.val, node.balance), shape='square')
             else:
                 if self.isRoot(node):
-                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance))
+                    g.node(str(node.viz_id), label="{0}[{1}]".format(node.val, node.balance), shape="triangle")
                 else:
                     g.node(str(node.viz_id), label="{0}({1})[{2}]".format(node.val, node.parent.val, node.balance))
 
@@ -248,7 +248,9 @@ class BinaryTree(PureBinaryTree):
                     node.right.parent = node
             else:
                 node.val = suc.val
-                suc.parent.left = None
+                suc.parent.left = suc.right
+                if suc.parent.left:
+                    suc.parent.left.parent = suc.parent
 
 class AVLTree(PureBinaryTree):
     def __init__(self):
@@ -352,7 +354,9 @@ class AVLTree(PureBinaryTree):
                     to_remove.right.parent = to_remove
                 to_balance = to_remove.right
             else:
-                suc.parent.left = None
+                suc.parent.left = suc.right
+                if suc.parent.left:
+                    suc.parent.left.parent = suc.parent
                 to_balance = suc
         elif to_remove.left is not None:
             # only left
@@ -404,11 +408,10 @@ class AVLTree(PureBinaryTree):
             else:
                 pnode.balance += 1
 
-            if pnode.balance is 1 or -1:
+            if pnode.balance is 1 or pnode.balance is -1:
                 return
 
             if pnode.balance is -2:
-                print("pnode.balance is -2")
                 if pnode.right.balance is 0:
                     top = self.rotateL(pnode)
                     top.balance = 1
@@ -422,9 +425,8 @@ class AVLTree(PureBinaryTree):
                     top = self.rotateL(pnode)
                     self.updateBalance(top)
                 break
-            
+                    
             if pnode.balance is 2:
-                print("pnode.balance is 2")
                 if pnode.left.balance is 0:
                     top = self.rotateR(pnode)
                     top.balance = -1
@@ -438,8 +440,9 @@ class AVLTree(PureBinaryTree):
                     top = self.rotateR(pnode)
                     self.updateBalance(top)
                 break
-            
-            node = pnode
+                    
+            else:
+                node = pnode
         return
         
 if __name__ == '__main__':
@@ -465,16 +468,12 @@ if __name__ == '__main__':
             cmd = str(inputs[0])
             x = int(inputs[1])
             if cmd == "insert":
-                print("run insert({0})".format(x))
                 tree.insert(x)
             elif cmd == "delete":
-                print("run delete({0})".format(x))
                 tree.delete(x)
             elif cmd == "rotateR":
-                print("run rotateR({0})".format(x))
                 tree.rotateR(tree.find(x))
             elif cmd == "rotateL":
-                print("run rotateL({0})".format(x))
                 tree.rotateL(tree.find(x))
             else:
                 print("type 'insert x' or 'rotateR x' or 'rotateL x")
