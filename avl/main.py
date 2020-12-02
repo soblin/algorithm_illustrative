@@ -340,22 +340,32 @@ class AVLTree(PureBinaryTree):
             # two children
             suc = self.getSuccessor(to_remove)
             to_remove.val = suc.val
-            to_remove = suc
+            if suc is to_remove.left:
+                node.val = suc.val
+                node.right = suc.right
+                node.right.parent = node.right
+                to_remove = suc
+            else:
+                suc.parent.left = None
+                to_remove = suc
         elif to_remove.left is not None:
             # only left
-            to_remove.val = to_remove.left.val
-            to_remove = to_remove.left
+            if self.isLeft(to_remove):
+                to_remove.parent.left = to_remove.left
+            else:
+                to_remove.parent.right = to_remove.left
         elif to_remove.right is not None:
             # only right
-            to_remove.val = to_remove.right.val
-            to_remove = to_remove.right
-            
-        pnode = to_remove.parent
-        if self.isLeft(to_remove):
-            pnode.left = None
+            if self.isLeft(to_remove):
+                to_remove.parent.left = to_remove.right
+            else:
+                to_remove.parent.right = to_remove.right
         else:
-            pnode.right = None
-
+            if self.isLeft(to_remove):
+                to_remove.parent.left = None
+            else:
+                to_remove.parent.right = None
+                
         self.rebalanceDelete(to_remove)
 
     def rebalanceDelete(self, removed):
