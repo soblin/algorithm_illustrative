@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import graphviz
 from collections import deque
+import warnings
 import sys
 input = sys.stdin.readline
 
@@ -67,9 +68,11 @@ class PureBinaryTree(object):
 
     def rotateR(self, node):
         if node is None:
-            raise IndexError("rotateR must not be used for None node")
+            warnings.warn("rotateR applied for None. Ignore")
+            return
         if node.left is None:
-            raise IndexError("node.left must not be None in rotateR")
+            warnings.warn("rotateR applied with left node None. Ignore")
+            return
         
         parent = node.parent
         lnode = node.left
@@ -100,9 +103,11 @@ class PureBinaryTree(object):
         
     def rotateL(self, node):
         if node is None:
-            raise IndexError("rotateR must not be used for None node")
+            warnings.warn("rotateR applied for None. Ignore")
+            return
         if node.right is None:
-            raise IndexError("node.right must not be None in rotateL")
+            warnings.warn("rotateR applied with right node None. Ignore")
+            return
         
         parent = node.parent
         rnode = node.right
