@@ -94,7 +94,7 @@ class PureBinaryTree(object):
 
         parent = node.parent
         lnode = node.left
-        lrnode = node.right
+        lrnode = lnode.right
         if node.parent is not None:
             is_left = node.is_left()
         #1
@@ -332,21 +332,24 @@ class RBTree(PureBinaryTree):
             # rotation
             # LL case
             if node.is_left() and node.parent.is_left():
-                print("here")
+                print("node.is_left() and node.parent.is_left()")
                 top = self.rotate_right(node.parent.parent)
                 print("top.val is {0}".format(top.val))
                 self.update_color(top)
                 return
             if node.is_right() and node.parent.is_left():
+                print("node.is_right() and node.parent.is_left()")
                 tmp = self.rotate_left(node.parent)
                 top = self.rotate_right(tmp.parent)
                 self.update_color(top)
                 return
             if node.is_right() and node.parent.is_right():
+                print("node.is_right() and node.parent.is_right()")
                 top = self.rotate_left(node.parent.parent)
                 self.update_color(top)
                 return
             if node.is_left() and node.parent.is_right():
+                print("node.is_left() and node.parent.is_right()")
                 tmp = self.rotate_right(node.parent)
                 top = self.rotate_left(tmp.parent)
                 self.update_color(top)
@@ -422,6 +425,16 @@ if __name__ == '__main__':
     values = [1, 2, 3, 4, 5 ,6, 7 ,8 ,9, 10, 11, 12, 20, 30, 40, 50, 60, 70, 21, 19, 29, 28, 27, 22, 18, 17]
     for val in values:
         tree.insert(val)
+
+    node27 = tree.find(27)
+    node27.left = Node(25)
+    node27.left.parent = node27
+    node21 = tree.find(21)
+    node22 = tree.find(22)
+    node21.color = Color.BLACK
+    node27.color = Color.BLACK
+    node22.color = Color.RED
+
     """
     print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
