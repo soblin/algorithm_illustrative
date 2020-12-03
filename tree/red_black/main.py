@@ -5,6 +5,7 @@ from enum import Enum
 import warnings
 import graphviz
 from collections import deque
+import random
 
 class Color(Enum):
     RED = 0
@@ -378,7 +379,7 @@ class RBTree(PureBinaryTree):
         queue.append(self.root)
         # BFS
         while len(queue) is not 0:
-            node = queue.pop()
+            node = queue.popleft()
             # visualize node
             if node.is_leaf():
                 self.vis_node(node, "square")
@@ -417,10 +418,11 @@ class RBTree(PureBinaryTree):
 
 if __name__ == '__main__':
     tree = RBTree()
-    values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12, 15, 20, 30, 40]
+    # values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12, 15, 20, 30, 40]
+    values = [1, 2, 3, 4, 5 ,6, 7 ,8 ,9, 10, 11, 12, 20, 30, 40, 50, 60, 70, 21, 19, 29, 28, 27, 22, 18, 17]
     for val in values:
         tree.insert(val)
-    
+    """
     print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
     while True:
@@ -446,3 +448,4 @@ if __name__ == '__main__':
                 tree.rotateL(tree.find(x))
             else:
                 print("type 'insert x' or 'rotateR x' or 'rotateL x")
+    """
