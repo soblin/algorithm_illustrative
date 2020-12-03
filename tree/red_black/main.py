@@ -318,7 +318,6 @@ class RBTree(PureBinaryTree):
         if node is None:
             return
         if node is self.root:
-            print("traversed to root!")
             self.root.color = Color.BLACK
             return
         
@@ -329,27 +328,21 @@ class RBTree(PureBinaryTree):
 
         # node.parent.is_red()
         elif self.is_black(node.uncle()):
-            # rotation
             # LL case
             if node.is_left() and node.parent.is_left():
-                print("node.is_left() and node.parent.is_left()")
                 top = self.rotate_right(node.parent.parent)
-                print("top.val is {0}".format(top.val))
                 self.update_color(top)
                 return
             if node.is_right() and node.parent.is_left():
-                print("node.is_right() and node.parent.is_left()")
                 tmp = self.rotate_left(node.parent)
                 top = self.rotate_right(tmp.parent)
                 self.update_color(top)
                 return
             if node.is_right() and node.parent.is_right():
-                print("node.is_right() and node.parent.is_right()")
                 top = self.rotate_left(node.parent.parent)
                 self.update_color(top)
                 return
             if node.is_left() and node.parent.is_right():
-                print("node.is_left() and node.parent.is_right()")
                 tmp = self.rotate_right(node.parent)
                 top = self.rotate_left(tmp.parent)
                 self.update_color(top)
@@ -421,21 +414,10 @@ class RBTree(PureBinaryTree):
 
 if __name__ == '__main__':
     tree = RBTree()
-    # values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12, 15, 20, 30, 40]
-    values = [1, 2, 3, 4, 5 ,6, 7 ,8 ,9, 10, 11, 12, 20, 30, 40, 50, 60, 70, 21, 19, 29, 28, 27, 22, 18, 17]
+    values = random.sample(range(200), 100)
     for val in values:
         tree.insert(val)
 
-    node27 = tree.find(27)
-    node27.left = Node(25)
-    node27.left.parent = node27
-    node21 = tree.find(21)
-    node22 = tree.find(22)
-    node21.color = Color.BLACK
-    node27.color = Color.BLACK
-    node22.color = Color.RED
-
-    """
     print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
     while True:
@@ -461,4 +443,4 @@ if __name__ == '__main__':
                 tree.rotateL(tree.find(x))
             else:
                 print("type 'insert x' or 'rotateR x' or 'rotateL x")
-    """
+
