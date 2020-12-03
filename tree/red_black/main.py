@@ -27,7 +27,7 @@ class Node:
 
     def is_leaf(self):
         return self.left is None and self.right is None
-    
+
     def sibling(self):
         if self.is_left():
             return self.parent.right
@@ -35,7 +35,7 @@ class Node:
             return self.parent.left
 
     def uncle(self):
-        return self.sibling(self.parent)
+        return self.parent.sibling()
     
 class PureBinaryTree(object):
     def __init__(self):
@@ -94,6 +94,8 @@ class PureBinaryTree(object):
         parent = node.parent
         lnode = node.left
         lrnode = node.right
+        if node.parent is not None:
+            is_left = node.is_left()
         #1
         node.left = lrnode
         if lrnode:
@@ -101,14 +103,12 @@ class PureBinaryTree(object):
         #2
         lnode.right = node
         node.parent = lnode
-        #change color
-        lnode.color = node.color
-        node.color = Color.RED
         if node is self.root:
             self.root = lnode
             self.root.parent = None
             return self.root
-        elif node.is_left():
+        
+        if is_left:
             lnode.parent = parent
             parent.left = lnode
             return lnode
@@ -128,6 +128,8 @@ class PureBinaryTree(object):
         parent = node.parent
         rnode = node.right
         rlnode = rnode.left
+        if node.parent is not None:
+            is_left = node.is_left()
         #1
         node.right = rlnode
         if rlnode:
@@ -135,15 +137,12 @@ class PureBinaryTree(object):
         #2
         rnode.left = node
         node.parent = rnode
-        #change color
-        rnode.color = node.color
-        node.color = Color.RED
         if node is self.root:
             self.root = rnode
             self.root.parent = None
             return self.root
-
-        elif node.is_left():
+        
+        if is_left:
             rnode.parent = parent
             parent.left  = rnode
             return rnode
@@ -277,9 +276,23 @@ class BinaryTree(PureBinaryTree):
 class RBTree(PureBinaryTree):
     def __init__(self):
         super().__init__()
-        self.root.color = Color.BLACK
+        self.g = None
         
+    def is_black(self, node):
+        if node is None:
+            return True
+        else:
+            return node.color is Color.BLACK
+
+    def is_red(self, node):
+        return node.color is Color.RED
+    
     def _insert(self, x):
+        if self.root is None:
+            self.root = Node(x)
+            self.root.color = Color.BLACK
+            return
+        
         node = self.root
         parent = None
         while node is not None:
@@ -291,20 +304,74 @@ class RBTree(PureBinaryTree):
 
         new_node = Node(x)
         new_node.color = Color.RED
-        if x < node.val:
+        if x < parent.val:
             parent.left = new_node
             new_node.parent = parent
         else:
             parent.right = new_node
             new_node.parent = parent
 
-        self.rebalanceRB(new_node)
+        self.rebalance_insert(new_node)
 
-    def rebalanceRB(self, new_node):
-        pass
+    def rebalance_insert(self, node):
+        if node is None:
+            return
+        if node is self.root:
+            print("traversed to root!")
+            self.root.color = Color.BLACK
+            return
+        
+        assert(self.is_red(node))
+        
+        if self.is_black(node.parent):
+            return
+
+        # node.parent.is_red()
+        elif self.is_black(node.uncle()):
+            # rotation
+            # LL case
+            if node.is_left() and node.parent.is_left():
+                print("here")
+                top = self.rotate_right(node.parent.parent)
+                print("top.val is {0}".format(top.val))
+                self.update_color(top)
+                return
+            if node.is_right() and node.parent.is_left():
+                tmp = self.rotate_left(node.parent)
+                top = self.rotate_right(tmp.parent)
+                self.update_color(top)
+                return
+            if node.is_right() and node.parent.is_right():
+                top = self.rotate_left(node.parent.parent)
+                self.update_color(top)
+                return
+            if node.is_left() and node.parent.is_right():
+                tmp = self.rotate_right(node.parent)
+                top = self.rotate_left(tmp.parent)
+                self.update_color(top)
+                return
+            
+        elif self.is_red(node.uncle()):
+            node.parent.color = Color.BLACK
+            node.uncle().color = Color.BLACK
+            node.parent.parent.color = Color.RED
+            self.rebalance_insert(node.parent.parent)
+            return
     
+    def update_color(self, top):
+        top.color = Color.BLACK
+        if top.left:
+            top.left.color = Color.RED
+        if top.right:
+            top.right.color = Color.RED
+
+    def vis_node(self, node, shape):
+        if node.color is Color.BLACK:
+            self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='gray72', style="filled")
+        else:
+            self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='#fb9a99', style="filled")
     def _view(self):
-        g = graphviz.Digraph()
+        self.g = graphviz.Digraph()
         queue = deque()
         viz_index = 0
         self.root.viz_id = viz_index
@@ -314,50 +381,46 @@ class RBTree(PureBinaryTree):
             node = queue.pop()
             # visualize node
             if node.is_leaf():
-                if node.color is Color.RED:
-                    g.node(str(node.viz_id), label="{0}".format(node.val), shape='square', fillcolor='#fbfa99', style="filled")
-                else:
-                    g.node(str(node.viz_id), label="{0}".format(node.val), shape='square')
+                self.vis_node(node, "square")
             else:
                 if self.is_root(node):
-                    g.node(str(node.viz_id), label="{0}".format(node.val), shape="triangle")
+                    self.vis_node(node, "triangle")
                 else:
-                    g.node(str(node.viz_id), label="{0}".format(node.val))
+                    self.vis_node(node, "circle")
 
             # add edge
             if node.left is not None:
                 viz_index += 1
                 node.left.viz_id = viz_index
                 queue.append(node.left)
-                g.edge(str(node.viz_id), str(node.left.viz_id), label=str(node.val))
+                self.g.edge(str(node.viz_id), str(node.left.viz_id), label=str(node.val))
                 # add empty for better visualization
                 if node.right is None:
                     viz_index += 1
-                    g.node(str(viz_index), shape="point")
-                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                    self.g.node(str(viz_index), shape="point")
+                    self.g.edge(str(node.viz_id), str(viz_index), style="dashed")
                     
             if node.right is not None:
                 # add empty for better visualization
                 if node.left is None:
                     viz_index += 1
-                    g.node(str(viz_index), shape="point")
-                    g.edge(str(node.viz_id), str(viz_index), style="dashed")
+                    self.g.node(str(viz_index), shape="point")
+                    self.g.edge(str(node.viz_id), str(viz_index), style="dashed")
                 
                 viz_index += 1
                 node.right.viz_id = viz_index
                 queue.append(node.right)
-                g.edge(str(node.viz_id), str(node.right.viz_id), label=str(node.val))
+                self.g.edge(str(node.viz_id), str(node.right.viz_id), label=str(node.val))
         
-        g.view()
+        self.g.view()
 
 
 if __name__ == '__main__':
-    tree = BinaryTree()
+    tree = RBTree()
     values = [7, 10, 13, 5, 3, 6, 1, 4, 17, 25, 12, 15, 20, 30, 40]
     for val in values:
         tree.insert(val)
     
-    # tree.delete(12)
     print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
 
     while True:
