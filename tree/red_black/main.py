@@ -18,7 +18,25 @@ class Node:
         self.parent = None
         self.color = None
         self.viz_id = 0
-        
+
+    def is_left(self):
+        return self.val < self.parent.val
+
+    def is_right(self):
+        return not self.is_left()
+
+    def is_leaf(self):
+        return self.left is None and self.right is None
+    
+    def sibling(self):
+        if self.is_left():
+            return self.parent.right
+        else:
+            return self.parent.left
+
+    def uncle(self):
+        return self.sibling(self.parent)
+    
 class PureBinaryTree(object):
     def __init__(self):
         self.root = None
@@ -26,16 +44,6 @@ class PureBinaryTree(object):
     def is_root(self, node):
         return node is self.root
 
-    def is_left(self, node):
-        assert node.parent is not None
-        return node.val < node.parent.val
-
-    def is_right(self, node):
-        return not self.is_left(node)
-
-    def is_leaf(self, node):
-        return node.left is None and node.right is None
-    
     def insert(self, x):
         if not hasattr(self, "_insert"):
             raise NotImplementedError("insert cannot be called")
@@ -93,21 +101,21 @@ class PureBinaryTree(object):
         #2
         lnode.right = node
         node.parent = lnode
-
+        #change color
+        lnode.color = node.color
+        node.color = Color.RED
         if node is self.root:
             self.root = lnode
             self.root.parent = None
             return self.root
+        elif node.is_left():
+            lnode.parent = parent
+            parent.left = lnode
+            return lnode
         else:
-            is_left = self.is_left(node)
-            if is_left:
-                lnode.parent = parent
-                parent.left = lnode
-                return lnode
-            else:
-                lnode.parent = parent
-                parent.right = lnode
-                return lnode
+            lnode.parent = parent
+            parent.right = lnode
+            return lnode
 
     def rotate_left(self, node):
         if node is None:
@@ -127,22 +135,22 @@ class PureBinaryTree(object):
         #2
         rnode.left = node
         node.parent = rnode
-
+        #change color
+        rnode.color = node.color
+        node.color = Color.RED
         if node is self.root:
             self.root = rnode
             self.root.parent = None
             return self.root
 
+        elif node.is_left():
+            rnode.parent = parent
+            parent.left  = rnode
+            return rnode
         else:
-            is_left = self.is_left(node)
-            if is_left:
-                rnode.parent = parent
-                parent.left  = rnode
-                return rnode
-            else:
-                rnode.parent = parent
-                parent.right = rnode
-                return rnode
+            rnode.parent = parent
+            parent.right = rnode
+            return rnode
 
 class BinaryTree(PureBinaryTree):
     def __init__(self):
@@ -183,7 +191,7 @@ class BinaryTree(PureBinaryTree):
         if node.left is None and node.right is None:
             # no children
             if self.is_root(node): self.root = None
-            elif self.is_left(node): node.parent.left = None
+            elif node.is_left(): node.parent.left = None
             else: node.parent.right = None
 
         elif node.right is None:
@@ -191,7 +199,7 @@ class BinaryTree(PureBinaryTree):
             if self.is_root(node):
                 self.root = node.left
                 self.root.parent = None
-            elif self.is_left(node):
+            elif node.is_left():
                 node.parent.left = node.left
                 node.left.parent = node.parent
             else:
@@ -202,7 +210,7 @@ class BinaryTree(PureBinaryTree):
             if self.is_root(node):
                 self.root = node.right
                 self.root.parent = None
-            elif self.is_left(node):
+            elif node.is_left():
                 node.parent.left = node.right
                 node.right.parent = node.parent
             else:
@@ -232,7 +240,7 @@ class BinaryTree(PureBinaryTree):
         while len(queue) is not 0:
             node = queue.pop()
             # visualize node
-            if self.is_leaf(node):
+            if node.is_leaf():
                 g.node(str(node.viz_id), label="{0}".format(node.val), shape='square')
             else:
                 if self.is_root(node):
@@ -269,7 +277,32 @@ class BinaryTree(PureBinaryTree):
 class RBTree(PureBinaryTree):
     def __init__(self):
         super().__init__()
+        self.root.color = Color.BLACK
+        
+    def _insert(self, x):
+        node = self.root
+        parent = None
+        while node is not None:
+            parent = node
+            if x < node.val:
+                node = node.left
+            else:
+                node = node.right
 
+        new_node = Node(x)
+        new_node.color = Color.RED
+        if x < node.val:
+            parent.left = new_node
+            new_node.parent = parent
+        else:
+            parent.right = new_node
+            new_node.parent = parent
+
+        self.rebalanceRB(new_node)
+
+    def rebalanceRB(self, new_node):
+        pass
+    
     def _view(self):
         g = graphviz.Digraph()
         queue = deque()
@@ -280,9 +313,9 @@ class RBTree(PureBinaryTree):
         while len(queue) is not 0:
             node = queue.pop()
             # visualize node
-            if self.is_leaf(node):
+            if node.is_leaf():
                 if node.color is Color.RED:
-                    g.node(str(node.viz_id), label="{0}".format(node.val), shape='square', fillcolor='#fbfa99', style="filled", fillcolor='#fb9a99')
+                    g.node(str(node.viz_id), label="{0}".format(node.val), shape='square', fillcolor='#fbfa99', style="filled")
                 else:
                     g.node(str(node.viz_id), label="{0}".format(node.val), shape='square')
             else:
