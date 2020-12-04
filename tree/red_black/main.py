@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# https://www.geeksforgeeks.org/red-black-tree-set-3-delete-2/
 import sys
 input = sys.stdin.readline
 from enum import Enum
@@ -362,11 +363,64 @@ class RBTree(PureBinaryTree):
         if top.right:
             top.right.color = Color.RED
 
+    def _delete(self, x):
+        node = self.find(x)
+        if node is None:
+            return
+
+        if node is self.root:
+            self.root = None
+            return
+
+        if node.is_leaf():
+            to_delete = node
+            replace = None
+        elif node.right is None:
+            to_delete = node
+            replace = node.left
+        elif node.left is None:
+            to_delete = node
+            replace = node.right
+        else:
+            suc = self.get_successor(node)
+            node.val = suc.val
+            to_delete = suc
+            replace = suc.right
+
+        if self.is_red(to_delete) and self.is_black(replace):
+            print("self.is_red(to_delete) and self.is_black(replace)")
+            parent = to_delete.parent
+            if to_delete.is_left():
+                replace.parent = parent
+                parent.left = replace
+                replace.color = Color.BLACK
+            else:
+                replace.parent = parent
+                parent.right = replace
+                replace.color = Color.BLACK
+            return
+        
+        elif replace is not None and self.is_black(to_delete) and self.is_red(replace):
+            print("replace is not None and self.is_black(to_delete) and self.is_red(replace)")
+            parent = to_delete.parent
+            if to_delete.is_left():
+                replace.parent = parent
+                parent.left = replace
+                replace.color = Color.BLACK
+            else:
+                replace.parent = parent
+                parent.right = replace
+                replace.color = Corlor.BLACK
+            return
+        elif self.is_black(to_delete) and self.is_black(replace):
+            print("self.is_black(to_delete) and self.is_black(replace)")
+        
     def vis_node(self, node, shape):
         if node.color is Color.BLACK:
             self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='gray72', style="filled")
         else:
             self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='#fb9a99', style="filled")
+    
     def _view(self):
         self.g = graphviz.Digraph()
         queue = deque()
@@ -414,11 +468,12 @@ class RBTree(PureBinaryTree):
 
 if __name__ == '__main__':
     tree = RBTree()
-    values = random.sample(range(200), 100)
+    # values = random.sample(range(200), 100)
+    values = [30, 20, 40, 10]
     for val in values:
         tree.insert(val)
 
-    print("type 'insert x' or 'delete x' or 'rotateR x' 'rotateL x' or 'view'. type q to quit.")
+    print("type 'insert x' or 'delete x' or 'rotate_right x' 'rotate_left x' or 'view'. type q to quit.")
 
     while True:
         inputs = list(input().split())
@@ -437,10 +492,10 @@ if __name__ == '__main__':
                 tree.insert(x)
             elif cmd == "delete":
                 tree.delete(x)
-            elif cmd == "rotateR":
-                tree.rotateR(tree.find(x))
-            elif cmd == "rotateL":
-                tree.rotateL(tree.find(x))
+            elif cmd == "rotate_right":
+                tree.rotate_right(tree.find(x))
+            elif cmd == "rotate_left":
+                tree.rotate_left(tree.find(x))
             else:
-                print("type 'insert x' or 'rotateR x' or 'rotateL x")
+                print("type 'insert x' or 'rotate_right x' or 'rotate_left x")
 
