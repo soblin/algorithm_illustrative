@@ -287,7 +287,7 @@ class RBTree(PureBinaryTree):
             return node.color is Color.BLACK
 
     def is_red(self, node):
-        return node.color is Color.RED
+        return node and node.color is Color.RED
     
     def _insert(self, x):
         if self.root is None:
@@ -363,6 +363,17 @@ class RBTree(PureBinaryTree):
         if top.right:
             top.right.color = Color.RED
 
+    def shrink(self, single_child, node, parent):
+        if node.is_left():
+            parent.left = single_child
+            if single_child:
+                single_child.parent = parent
+        else:
+            parent.right = single_child
+            if single_child:
+                single_child.parent = parent
+        return
+    
     def _delete(self, x):
         node = self.find(x)
         if node is None:
@@ -390,31 +401,46 @@ class RBTree(PureBinaryTree):
         if self.is_red(to_delete) and self.is_black(replace):
             print("self.is_red(to_delete) and self.is_black(replace)")
             parent = to_delete.parent
-            if to_delete.is_left():
-                replace.parent = parent
-                parent.left = replace
-                replace.color = Color.BLACK
-            else:
-                replace.parent = parent
-                parent.right = replace
+            self.shrink(replace, to_delete, parent)
+            if replace:
                 replace.color = Color.BLACK
             return
         
         elif replace is not None and self.is_black(to_delete) and self.is_red(replace):
             print("replace is not None and self.is_black(to_delete) and self.is_red(replace)")
             parent = to_delete.parent
-            if to_delete.is_left():
-                replace.parent = parent
-                parent.left = replace
+            self.shrink(replace, to_delete, parent)
+            if replace:
                 replace.color = Color.BLACK
-            else:
-                replace.parent = parent
-                parent.right = replace
-                replace.color = Corlor.BLACK
             return
+
+        """
+        too complicaed...
         elif self.is_black(to_delete) and self.is_black(replace):
             print("self.is_black(to_delete) and self.is_black(replace)")
+            sib = to_delete.sibling()
+            if self.is_black(sib) and self.is_black(sib.left) and self.is_black(sib.right):
+                self.recolor(to_delete)
+                self.shrink(replace, to_delete, parent)
+            elif self.has_red_child(sib):
+                if sib.is_right() and self.is_red(sib.left) and self.is_sib(self.right):
+                    self.shrink(replace, to_delete, sib.parent)
+            return
+        """
         
+    def recolor(self, node):
+        if node is self.root or node is None:
+            return
+        sib = node.sibling()
+        if sib and self.is_black(sib.left) and self.is_black(sib.right):
+            sib.color = Color.RED
+        if self.is_black(sib.parent):
+            self.recolor(sib.parent)
+        return
+
+    def has_red_child(self, node):
+        return self.is_red(node.left) or self.is_red(node.right)
+    
     def vis_node(self, node, shape):
         if node.color is Color.BLACK:
             self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='gray72', style="filled")
