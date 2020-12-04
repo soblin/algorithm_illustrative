@@ -379,10 +379,6 @@ class RBTree(PureBinaryTree):
         if node is None:
             return
 
-        if node is self.root:
-            self.root = None
-            return
-
         if node.is_leaf():
             to_delete = node
             replace = None
@@ -398,49 +394,80 @@ class RBTree(PureBinaryTree):
             to_delete = suc
             replace = suc.right
 
-        if self.is_red(to_delete) and self.is_black(replace):
-            print("self.is_red(to_delete) and self.is_black(replace)")
-            parent = to_delete.parent
-            self.shrink(replace, to_delete, parent)
-            if replace:
-                replace.color = Color.BLACK
-            return
-        
-        elif replace is not None and self.is_black(to_delete) and self.is_red(replace):
-            print("replace is not None and self.is_black(to_delete) and self.is_red(replace)")
-            parent = to_delete.parent
-            self.shrink(replace, to_delete, parent)
-            if replace:
-                replace.color = Color.BLACK
+        # case0
+        if to_delete.color is Color.RED:
+            self.shrink(replace, to_delete, to_delete.parent)
             return
 
-        """
-        too complicaed...
-        elif self.is_black(to_delete) and self.is_black(replace):
-            print("self.is_black(to_delete) and self.is_black(replace)")
+        # case0
+        if to_delete.color is Color.RED and self.is_red(replace):
+            self.shrink(replace, to_delete, to_delete.parent)
+            replace.color = Color.RED
+            return
+
+        # case1-6
+        elif to_delete.color is Color.BLACK and self.is_black(replace):
             sib = to_delete.sibling()
-            if self.is_black(sib) and self.is_black(sib.left) and self.is_black(sib.right):
-                self.recolor(to_delete)
-                self.shrink(replace, to_delete, parent)
-            elif self.has_red_child(sib):
-                if sib.is_right() and self.is_red(sib.left) and self.is_sib(self.right):
-                    self.shrink(replace, to_delete, sib.parent)
-            return
-        """
-        
-    def recolor(self, node):
-        if node is self.root or node is None:
-            return
-        sib = node.sibling()
-        if sib and self.is_black(sib.left) and self.is_black(sib.right):
-            sib.color = Color.RED
-        if self.is_black(sib.parent):
-            self.recolor(sib.parent)
-        return
+            self.shrink(replace, to_delete, sib.parent)
+            self.rebalanceDelete(replace, sib)
 
-    def has_red_child(self, node):
-        return self.is_red(node.left) or self.is_red(node.right)
-    
+    def rebalanceDelete(self, node, sib):
+        # case1
+        if node is self.root:
+            self.root.color = Color.BLACK
+            return
+
+        # case3
+        if sib and self.is_black(sib) and self.is_black(sib.left) and self.is_black(sib.right):
+            sib.color = Color.BLACK
+            self.rebalanceDelete(sib.parent, sib.parent.sibling())
+            return
+
+        # case2
+        if sib and self.is_red(sib):
+            if sib.is_right():
+                sib = self.rotate_left(sib.parent)
+                sib.color = Color.BLACK
+                sib.left.color = Color.RED
+                self.rebalanceAux(sib.left.left, sib.left.right, sib.left)
+            else:
+                sib = self.rotate_right(sib.parent)
+                sib.color = Color.BLACK
+                sib.right.color = Color.RED
+                self.rebalanceAux(sib.right.right, sib.right.left, sib.right)
+
+    def rebalanceAux(self, node, sib, parent):
+        assert(parent is node.parent)
+        assert(parent is sib.parent)
+        # case4
+        if parent and self.is_red(parent) and self.is_black(sib.left) and self.is_black(sib.right):
+            parent.color = Color.BLACK
+            sib.color = Color.RED
+            return
+
+        # case5
+        if parent and node.is_left():
+            if self.is_red(sib.left) and self.is_black(sib.right):
+                sib = self.rotate_right(sib)
+                sib.color = Color.BLACK
+                sib.right.color = Color.RED
+        if parent and node.is_right():
+            if self.is_red(sib.right) and self.is_black(sib.left):
+                sib = self.rotate_left(sib)
+                sib.color = Color.BLACK
+                sib.left.color = Color.RED
+
+        # case6
+        is_left = parent and node.is_left()
+        if is_left:
+            if self.is_black(sib.left) and self.is_red(sib.right):
+                sib = self.rotate_left(parent)
+                sib.right.color = Color.BLACK
+        else:
+            if self.is_red(sib.left) and self.is_black(sib.right):
+                sib = self.rotate_right(parent)
+                sib.left.color = Color.BLACK
+
     def vis_node(self, node, shape):
         if node.color is Color.BLACK:
             self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='gray72', style="filled")
@@ -494,11 +521,18 @@ class RBTree(PureBinaryTree):
 
 if __name__ == '__main__':
     tree = RBTree()
-    # values = random.sample(range(200), 100)
-    values = [30, 20, 40, 10]
+    values = random.sample(range(200), 100)
+    # values = [30, 20, 40, 10]
     for val in values:
         tree.insert(val)
 
+    # tree.view()
+    if True:
+        deletes = random.sample(values, 50)
+        for delete in deletes:
+            tree.delete(delete)
+        tree.view()
+    
     print("type 'insert x' or 'delete x' or 'rotate_right x' 'rotate_left x' or 'view'. type q to quit.")
 
     while True:
