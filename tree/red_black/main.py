@@ -38,6 +38,13 @@ class Node:
 
     def uncle(self):
         return self.parent.sibling()
+
+    def delete(self, node):
+        if node is self.left:
+            self.left = None
+        if node is self.right:
+            self.right = None
+        return
     
 class PureBinaryTree(object):
     def __init__(self):
@@ -396,19 +403,27 @@ class RBTree(PureBinaryTree):
 
         # case0
         if to_delete.color is Color.RED:
+            print("case0-1")
             self.shrink(replace, to_delete, to_delete.parent)
             return
 
         # case0
-        if to_delete.color is Color.RED and self.is_red(replace):
+        if to_delete.color is Color.BLACK and replace and self.is_red(replace):
+            print("case0-2")
             self.shrink(replace, to_delete, to_delete.parent)
-            replace.color = Color.RED
+            replace.color = Color.BLACK
             return
 
         # case1-6
         elif to_delete.color is Color.BLACK and self.is_black(replace):
-            sib = to_delete.sibling()
-            self.shrink(replace, to_delete, sib.parent)
+            parent = to_delete.parent # sib may be None
+            sib = to_delete.sibling() # sib may be None
+            if to_delete.is_leaf():
+                parent.delete(to_delete)
+                if sib is None:
+                    parent.color = Color.BLACK
+                return
+            self.shrink(replace, to_delete, parent)
             self.rebalanceDelete(replace, sib)
 
     def rebalanceDelete(self, node, sib):
@@ -420,7 +435,10 @@ class RBTree(PureBinaryTree):
         # case3
         if sib and self.is_black(sib) and self.is_black(sib.left) and self.is_black(sib.right):
             sib.color = Color.BLACK
-            self.rebalanceDelete(sib.parent, sib.parent.sibling())
+            if sib.parent:
+                self.rebalanceDelete(sib.parent, sib.parent.sibling())
+            else:
+                sib.color = Color.BLACK
             return
 
         # case2
@@ -521,14 +539,15 @@ class RBTree(PureBinaryTree):
 
 if __name__ == '__main__':
     tree = RBTree()
-    values = random.sample(range(200), 100)
+    size = 100
+    values = random.sample(range(200), size)
     # values = [30, 20, 40, 10]
     for val in values:
         tree.insert(val)
 
     # tree.view()
     if True:
-        deletes = random.sample(values, 50)
+        deletes = random.sample(values, int(size/2))
         for delete in deletes:
             tree.delete(delete)
         tree.view()
