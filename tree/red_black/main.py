@@ -424,7 +424,7 @@ class RBTree(PureBinaryTree):
             parent = to_delete.parent # sib may be None
             sib = to_delete.sibling() # sib may be None
             node_is_left = to_delete.is_left()
-            parent.delete(to_delete)
+            # parent.delete(to_delete)
             self.shrink(replace, to_delete, parent)
             self.rebalanceDelete(replace, sib, parent, node_is_left)
 
@@ -439,17 +439,23 @@ class RBTree(PureBinaryTree):
         if sib and self.is_red(sib):
             print("case2")
             if sib.is_right():
-                sib = self.rotate_left(parent)
+                print("sib.is_right()")
+                print("sib = {0}".format(sib.val))
+                sib = self.rotate_left(sib.parent)
                 sib.color = Color.BLACK
                 sib.left.color = Color.RED
                 if sib.left.left:
+                    print("sib.left.left!")
                     self.rebalanceDelete(sib.left.left, sib.left.right, sib.left, True)
                 return
-            else:
+            elif sib.is_left():
+                print("sib.is_left()")
+                print("sib = {0}".format(sib.val))
                 sib = self.rotate_right(sib.parent)
                 sib.color = Color.BLACK
                 sib.right.color = Color.RED
                 if sib.right.right:
+                    print("sib.right.right!")
                     self.rebalanceDelete(sib.right.right, sib.right.left, sib.right, False)
                 return
 
@@ -458,14 +464,14 @@ class RBTree(PureBinaryTree):
         if self.is_black(parent) and self.is_black(sib):
             print("case3")
             if sib is None:
-                if parent.parent is self.root:
+                if parent is self.root:
                     return
                 else:
                     self.rebalanceDelete(parent, parent.sibling(), parent.parent, parent.is_left())
                     return
             elif self.is_black(sib.left) and self.is_black(sib.right):
                 sib.color = Color.RED
-                if parent.parent is self.root:
+                if parent is self.root:
                     return
                 else:
                     self.rebalanceDelete(parent, parent.sibling(), parent.parent, parent.is_left())
@@ -474,37 +480,69 @@ class RBTree(PureBinaryTree):
         # case4
         if parent and self.is_red(parent) and self.is_black(sib):
             if sib is None:
+                print("case4")
                 parent.color = Color.BLACK
                 return
             elif sib is not None and self.is_black(sib.left) and self.is_black(sib.right):
+                print("case4")
                 parent.color = Color.BLACK
                 sib.color = Color.RED
                 return
 
         # case5
-        if parent and node_is_left:
+        if parent and sib and node_is_left:
             if sib.left and self.is_red(sib.left) and self.is_black(sib.right):
-                new_sib = self.rotate_right(sib)
-                new_sib.color = Color.BLACK
-                new_sib.right.color = Color.RED
-        elif parent and not node_is_left:
-            if sib.right and self.is_red(sib.right) and self.is_black(sib.left):
-                new_sib = self.rotate_left(sib)
-                new_sib.color = Color.BLACK
-                new_sib.left.color = Color.RED
+                print("case5, node_is_left")
+                sib = self.rotate_right(sib)
+                sib.color = Color.BLACK
+                sib.right.color = Color.RED
+        elif parent and sib and not node_is_left:
+            if sib.right and self.is_black(sib.left) and self.is_red(sib.right):
+                print("case5, not nod_is_left")
+                sib = self.rotate_left(sib)
+                sib.color = Color.BLACK
+                sib.left.color = Color.RED
 
         # case6
         is_left = parent and node_is_left
         is_right = parent and not node_is_left
-        if is_left:
+        if is_left and sib:
+            print("case6, is_left")
             if sib.right and self.is_red(sib.right):
+                self.swap_color(parent, sib)
                 sib = self.rotate_left(parent)
                 sib.right.color = Color.BLACK
-        elif is_right:
+        elif is_right and sib:
+            print("case6, is_right")
             if sib.left and self.is_red(sib.left):
+                self.swap_color(parent, sib)
                 sib = self.rotate_right(parent)
                 sib.left.color = Color.BLACK
 
+    def swap_color(self, node1, node2):
+        if node1:
+            color1 = node1.color
+            if node2:
+                color2 = node2.color
+                node1.color = color2
+                node2.color = color1
+                return
+            else:
+                node1.color = Color.RED
+                return
+        if node2:
+            color2 = node2.color
+            if node1:
+                color1 = node1.color
+                node1.color = color2
+                node2.color = color1
+                return
+            else:
+                node2.color = Color.RED
+                return
+
+        return
+    
     def vis_node(self, node, shape):
         if node.color is Color.BLACK:
             self.g.node(str(node.viz_id), label="{0}".format(node.val), shape=shape, fillcolor='gray72', style="filled")
@@ -558,18 +596,20 @@ class RBTree(PureBinaryTree):
 if __name__ == '__main__':
     tree = RBTree()
     size = 40
-    values = random.sample(range(200), size)
-    # values = [i for i in range(40)]
-    for i in values:
-        tree.insert(i)
+    # values = random.sample(range(200), size)
+    values = [i for i in range(100)]
+    for value in values:
+        tree.insert(value)
     # values = [30, 20, 40, 10]
     #for val in values:
     #    tree.insert(val)
 
     # tree.view()
-    deletes = random.sample(values, int(size/2))
+    deletes = [i for i in range(40)] # 0-39
+    deletes2 = [i+50 for i in range(17)] # 50-59
+    deletes.extend(deletes2)
     # deletes = [0, 10, 20, 30]
-    # deletes = [int(i*2) for i in range(15)]
+    # deletes = [int(i*20) for i in range(10)]
     for delete in deletes:
         tree.delete(delete)
     tree.view()
