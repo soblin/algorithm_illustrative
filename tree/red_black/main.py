@@ -410,6 +410,11 @@ class RBTree(PureBinaryTree):
         # case0
         if to_delete.color is Color.BLACK and replace and self.is_red(replace):
             print("case0-2")
+            if to_delete is self.root:
+                self.root = replace
+                self.root.color = Color.BLACK
+                self.root.parent = None
+                return
             self.shrink(replace, to_delete, to_delete.parent)
             replace.color = Color.BLACK
             return
@@ -418,71 +423,76 @@ class RBTree(PureBinaryTree):
         elif to_delete.color is Color.BLACK and self.is_black(replace):
             parent = to_delete.parent # sib may be None
             sib = to_delete.sibling() # sib may be None
-            if to_delete.is_leaf():
-                parent.delete(to_delete)
-                if sib is None:
-                    parent.color = Color.BLACK
-                return
+            parent.delete(to_delete)
             self.shrink(replace, to_delete, parent)
-            self.rebalanceDelete(replace, sib)
+            self.rebalanceDelete(replace, sib, parent)
 
-    def rebalanceDelete(self, node, sib):
+    def rebalanceDelete(self, node, sib, parent):
         # case1
-        if node is self.root:
+        if self.root is node:
+            print("case1")
             self.root.color = Color.BLACK
             return
 
-        # case3
-        if sib and self.is_black(sib) and self.is_black(sib.left) and self.is_black(sib.right):
-            sib.color = Color.BLACK
-            if sib.parent:
-                self.rebalanceDelete(sib.parent, sib.parent.sibling())
-            else:
-                sib.color = Color.BLACK
-            return
-
-        # case2
+        # case2        
         if sib and self.is_red(sib):
+            print("case2")
             if sib.is_right():
-                sib = self.rotate_left(sib.parent)
+                sib = self.rotate_left(parent)
                 sib.color = Color.BLACK
                 sib.left.color = Color.RED
-                self.rebalanceAux(sib.left.left, sib.left.right, sib.left)
+                if sib.left.left:
+                    self.rebalanceDelete(sib.left.left, sib.left.right, sib.left)
+                return
             else:
                 sib = self.rotate_right(sib.parent)
                 sib.color = Color.BLACK
                 sib.right.color = Color.RED
-                self.rebalanceAux(sib.right.right, sib.right.left, sib.right)
+                if sib.right.right:
+                    self.rebalanceDelete(sib.right.right, sib.right.left, sib.right)
+                return
 
-    def rebalanceAux(self, node, sib, parent):
-        assert(parent is node.parent)
-        assert(parent is sib.parent)
+        # case3
+        # sib may be None
+        if self.is_black(parent) and self.is_black(sib):
+            print("case3")
+            if sib is None:
+                self.rebalanceDelete(parent, parent.sibling(), parent.parent)
+                return
+            elif self.is_black(sib.left) and self.is_black(sib.right):
+                sib.color = Color.RED
+                self.rebalanceDelete(parent, parent.sibling(), parent.parent)
+                return
+                                     
         # case4
-        if parent and self.is_red(parent) and self.is_black(sib.left) and self.is_black(sib.right):
-            parent.color = Color.BLACK
-            sib.color = Color.RED
-            return
+        if parent and self.is_red(parent) and self.is_black(sib):
+            if sib is None:
+                parent.color = Color.BLACK
+                return
+            elif sib is not None and self.is_black(sib.left) and self.is_black(sib.right):
+                parent.color = Color.BLACK
+                sib.color = Color.RED
+                return
 
         # case5
         if parent and node.is_left():
-            if self.is_red(sib.left) and self.is_black(sib.right):
-                sib = self.rotate_right(sib)
-                sib.color = Color.BLACK
-                sib.right.color = Color.RED
-        if parent and node.is_right():
-            if self.is_red(sib.right) and self.is_black(sib.left):
-                sib = self.rotate_left(sib)
-                sib.color = Color.BLACK
-                sib.left.color = Color.RED
+            if sib.left and self.is_red(sib.left) and self.is_black(sib.right):
+                new_sib = self.rotate_right(sib)
+                new_sib.color = Color.BLACK
+                new_sib.right.color = Color.RED
+        elif parent and node.is_right():
+            if sib.right and self.is_red(sib.right) and self.is_black(sib.left):
+                new_sib = self.rotate_left(sib)
+                new_sib.color = Color.BLACK
+                new_sib.left.color = Color.RED
 
         # case6
-        is_left = parent and node.is_left()
-        if is_left:
-            if self.is_black(sib.left) and self.is_red(sib.right):
+        if parent and node.is_left():
+            if sib.right and self.is_red(sib.right):
                 sib = self.rotate_left(parent)
                 sib.right.color = Color.BLACK
-        else:
-            if self.is_red(sib.left) and self.is_black(sib.right):
+        elif parent and node.is_right():
+            if sib.left and self.is_red(sib.left):
                 sib = self.rotate_right(parent)
                 sib.left.color = Color.BLACK
 
@@ -502,13 +512,12 @@ class RBTree(PureBinaryTree):
         while len(queue) is not 0:
             node = queue.popleft()
             # visualize node
-            if node.is_leaf():
+            if self.is_root(node):
+                self.vis_node(node, "triangle")
+            elif node.is_leaf():
                 self.vis_node(node, "square")
             else:
-                if self.is_root(node):
-                    self.vis_node(node, "triangle")
-                else:
-                    self.vis_node(node, "circle")
+                self.vis_node(node, "circle")
 
             # add edge
             if node.left is not None:
@@ -540,14 +549,17 @@ class RBTree(PureBinaryTree):
 if __name__ == '__main__':
     tree = RBTree()
     size = 100
-    values = random.sample(range(200), size)
+    # values = random.sample(range(200), size)
+    for i in range(30):
+        tree.insert(i)
     # values = [30, 20, 40, 10]
-    for val in values:
-        tree.insert(val)
+    #for val in values:
+    #    tree.insert(val)
 
     # tree.view()
-    if True:
-        deletes = random.sample(values, int(size/2))
+    if False:
+        # deletes = random.sample(values, int(size/2))
+        deletes = [int(i*2) for i in range(15)]
         for delete in deletes:
             tree.delete(delete)
         tree.view()
