@@ -17,6 +17,9 @@ class Node:
 
     def is_leaf(self):
         return self.left is None and self.right is None
+
+    def __str__(self):
+        return f'{self.val1}:{self.val2}' if (self.val2 is not None) else f'{self.val1}'
     
 class Tree23:
     def __init__(self):
@@ -53,7 +56,27 @@ class Tree23:
         node4 = Node(4, None, node2, None, node6_8)
 
         self.root = node4
-        
+
+    def find(self, query):
+        node = self.root
+        while node is not None:
+            if query < node.val1:
+                node = node.left
+                continue
+            if query is node.val1:
+                return node
+            if node.val2 is None:
+                node = node.right
+                continue
+            if query < node.val2:
+                node = node.mid
+                continue
+            if query is node.val2:
+                return node
+            node = node.right
+
+        return None
+    
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -88,4 +111,7 @@ class Tree23:
 if __name__ == '__main__':
     tree = Tree23()
     tree.example()
+    for i in [1, 3, 5, 7, 9]:
+        print(tree.find(i))
+    
     tree.view()
