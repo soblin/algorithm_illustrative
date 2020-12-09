@@ -45,15 +45,15 @@ class Tree23:
             self.g.edge(str(node1.viz_id), str(node2.viz_id), label=label_s)
 
     def example(self):
-        node1 = Node(1, None, None, None, None)
-        node3 = Node(3, None, None, None, None)
-        node5 = Node(5, None, None, None, None)
-        node7 = Node(7, None, None, None, None)
-        node9_10 = Node(9, 10, None, None, None)
+        node1 = Node(10, None, None, None, None)
+        node3 = Node(30, None, None, None, None)
+        node5 = Node(50, None, None, None, None)
+        node7 = Node(70, None, None, None, None)
+        node9_10 = Node(90, 100, None, None, None)
 
-        node2 = Node(2, None, node1, None, node3)
-        node6_8 = Node(6, 8, node5, node7, node9_10)
-        node4 = Node(4, None, node2, None, node6_8)
+        node2 = Node(20, None, node1, None, node3)
+        node6_8 = Node(60, 80, node5, node7, node9_10)
+        node4 = Node(40, None, node2, None, node6_8)
 
         self.root = node4
 
@@ -76,7 +76,38 @@ class Tree23:
             node = node.right
 
         return None
-    
+
+    def insert(self, val):
+        node = self.root
+        parent = None
+        while node is not None:
+            parent = node
+            if val < node.val1:
+                node = node.left
+                continue
+            if val is node.val1:
+                return
+            if node.val2 is None:
+                node = node.right
+                continue
+            if val < node.val2:
+                node = node.mid
+                continue
+            if val is node.val2:
+                return
+            node = node.right
+
+        node = parent
+        # if node has only one elem, insert as the second elem
+        if node.val2 is None:
+            node.val2 = val
+            if node.val1 > node.val2:
+                node.val1, node.val2 = node.val2, node.val1
+            return
+        else:
+            print("node to be inserted has two values, skipping")
+        return
+
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -111,7 +142,24 @@ class Tree23:
 if __name__ == '__main__':
     tree = Tree23()
     tree.example()
-    for i in [1, 3, 5, 7, 9]:
+    for i in [10, 30, 50, 70, 90]:
         print(tree.find(i))
+
+    while True:
+        inputs = list(input().split())
+        if len(inputs) == 1:
+            cmd = str(inputs[0])
+            if cmd == 'q' or cmd == 'quit':
+                exit()
+            elif cmd == 'view':
+                tree.view()
+            else:
+                print("type 'q' or 'quit' or 'view'")
+        elif len(inputs) == 2:
+            cmd = str(inputs[0])
+            x = int(inputs[1])
+            if cmd == 'insert':
+                tree.insert(x)
+            else:
+                print("type 'insert x'")
     
-    tree.view()
