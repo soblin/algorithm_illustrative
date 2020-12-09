@@ -7,7 +7,7 @@ import graphviz
 from collections import deque
 
 class Node:
-    def __init__(self, val1, val2, left, mid, right, parent=None):
+    def __init__(self, val1, val2=None, left=None, mid=None, right=None, parent=None):
         self.val1 = val1
         self.val2 = val2
         self.left = left
@@ -90,7 +90,7 @@ class Tree23:
 
     def insert(self, val):
         if self.root is None:
-            self.root = Node(val, None, None, None, None)
+            self.root = Node(val)
             return
         
         node = self.root
@@ -122,31 +122,37 @@ class Tree23:
         # node has two elems
         if node is self.root:
             # this happens at the very first stage
-            if val < node.val1:
-                l = val
-                m = node.val1
-                r = node.val2
-            elif val < node.val2:
-                l = node.val1
-                m = val
-                r = node.val2
-            else:
-                l = node.val1
-                m = node.val2
-                r = node
-            
-            l = Node(l, None, None, None, None, None)
-            m = Node(m, None, None, None, None, None)
-            r = Node(r, None, None, None, None, None)
+            l, m, r = sorted([val, node.val1, node.val2])
+            l = Node(l)
+            m = Node(m)
+            r = Node(r)
             self.root = m
-            m.left = l
-            m.right = r
-            l.parent = m
-            r.parent = m
+            m.left, m.right = l, r
+            l.parent = r.parent = m
             return
-        
+
+        parent = node.parent # this is not None, because node is not root
+        if parent.val2 is None:
+            l, m, r = sorted([val, node.val1, node.val2])
+            l = Node(l)
+            r = Node(r)
+            if val < parent.val1:
+                parent.val2 = m
+                if parent.val1 > parent.val2:
+                    parent.val1, parent.val2 = parent.val2, parent.val1
+                parent.left = l
+                l.parent = parent
+                parent.mid = r
+                r.parent = parent
+            else:
+                parent.val2 = m
+                parent.mid = l
+                l.parent = parent
+                parent.right = r
+                r.parent = parent
+            return
         else:
-            print("node to be inserted has two values, skipping")
+            print("node to be inserted and its parent both have two values, skipping")
         return
 
     def view(self):
