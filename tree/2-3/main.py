@@ -7,12 +7,13 @@ import graphviz
 from collections import deque
 
 class Node:
-    def __init__(self, val1, val2, left, mid, right):
+    def __init__(self, val1, val2, left, mid, right, parent=None):
         self.val1 = val1
         self.val2 = val2
         self.left = left
         self.mid = mid
         self.right = right
+        self.parent = parent
         self.viz_id = 0
 
     def is_leaf(self):
@@ -43,7 +44,8 @@ class Tree23:
             self.g.edge(str(node1.viz_id), str(self.viz_index), style="dashed", label=label_s)
         else:
             self.g.edge(str(node1.viz_id), str(node2.viz_id), label=label_s)
-
+            self.g.edge(str(node2.viz_id), str(node2.parent.viz_id), style="dashed")
+            
     def example(self):
         node1 = Node(10, None, None, None, None)
         node3 = Node(30, None, None, None, None)
@@ -52,9 +54,18 @@ class Tree23:
         node9_10 = Node(90, 100, None, None, None)
 
         node2 = Node(20, None, node1, None, node3)
+        node1.parent = node2
+        node3.parent = node2
+        
         node6_8 = Node(60, 80, node5, node7, node9_10)
+        node5.parent = node6_8
+        node7.parent = node6_8
+        node9_10.parent = node6_8
+        
         node4 = Node(40, None, node2, None, node6_8)
-
+        node2.parent = node4
+        node6_8.parent = node4
+        
         self.root = node4
 
     def find(self, query):
@@ -78,6 +89,10 @@ class Tree23:
         return None
 
     def insert(self, val):
+        if self.root is None:
+            self.root = Node(val, None, None, None, None)
+            return
+        
         node = self.root
         parent = None
         while node is not None:
@@ -104,6 +119,32 @@ class Tree23:
             if node.val1 > node.val2:
                 node.val1, node.val2 = node.val2, node.val1
             return
+        # node has two elems
+        if node is self.root:
+            # this happens at the very first stage
+            if val < node.val1:
+                l = val
+                m = node.val1
+                r = node.val2
+            elif val < node.val2:
+                l = node.val1
+                m = val
+                r = node.val2
+            else:
+                l = node.val1
+                m = node.val2
+                r = node
+            
+            l = Node(l, None, None, None, None, None)
+            m = Node(m, None, None, None, None, None)
+            r = Node(r, None, None, None, None, None)
+            self.root = m
+            m.left = l
+            m.right = r
+            l.parent = m
+            r.parent = m
+            return
+        
         else:
             print("node to be inserted has two values, skipping")
         return
@@ -141,7 +182,7 @@ class Tree23:
         
 if __name__ == '__main__':
     tree = Tree23()
-    tree.example()
+    # tree.example()
     for i in [10, 30, 50, 70, 90]:
         print(tree.find(i))
 
