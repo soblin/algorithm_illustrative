@@ -5,6 +5,7 @@ import sys
 input = sys.stdin.readline
 import graphviz
 from collections import deque
+import random
 
 class Node:
     def __init__(self, val1, val2=None, left=None, mid=None, right=None, parent=None):
@@ -169,11 +170,44 @@ class Tree23:
                 self.root.right, parent.parent = parent, self.root
                 return
             elif node is parent.mid:
-                pass
-            else:
-                pass
+                l, m, r = sorted([val, node.val1, node.val2])
+                ch_l = Node(l)
+                ch_r = Node(r)
+                l, m, r = sorted([m, parent.val1, parent.val2])
+                pa_l = Node(l)
+                pa_l.left = parent.left
+                parent.left.parent = pa_l
+                pa_l.right = ch_l
+                ch_l.parent = pa_l
+                pa_r = Node(r)
+                pa_r.right = parent.right
+                parent.right.parent = pa_r
+                pa_r.left = ch_r
+                ch_r.parent = pa_r
+                self.root = Node(m)
+                self.root.left = pa_l
+                pa_l.parent = self.root
+                self.root.right = pa_r
+                pa_r.parent = self.root
+                return
+            elif node is parent.right:
+                l, m, r = sorted([val, node.val1, node.val2])
+                ch_l = Node(l)
+                ch_r = Node(r)
+                pa_r = Node(m)
+                pa_r.left, ch_l.parent = ch_l, pa_r
+                pa_r.right, ch_r.parent = ch_r, pa_r
+                parent.right = parent.mid
+                parent.mid = None
+                self.root = Node(parent.val2)
+                parent.val2 = None
+                self.root.left = parent
+                parent.parent = self.root
+                self.root.right = pa_r
+                pa_r.parent = self.root
+                return
         else:
-            print("node to be inserted and its parent both have two values, skipping")
+            print("unexpected case")
         return
 
     def view(self):
@@ -209,10 +243,10 @@ class Tree23:
         
 if __name__ == '__main__':
     tree = Tree23()
-    # tree.example()
-    for i in [10, 30, 50, 70, 90]:
-        print(tree.find(i))
-
+    values = random.sample(range(0, 100), 40)
+    for i in values:
+        tree.insert(i)
+    
     while True:
         inputs = list(input().split())
         if len(inputs) == 1:
