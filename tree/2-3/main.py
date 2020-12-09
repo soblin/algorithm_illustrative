@@ -151,6 +151,27 @@ class Tree23:
                 parent.right = r
                 r.parent = parent
             return
+        if parent is self.root:
+            if node is parent.left:
+                l, m, r = sorted([val, node.val1, node.val2])
+                ch_l = Node(l)
+                ch_r = Node(r)
+                l, m, r = sorted([m, parent.val1, parent.val2])
+                # make parent 1-elem node
+                parent.val1, parent.val2 = r, None
+                parent.left = parent.mid
+                parent.mid = None
+                pa_l = Node(l)
+                pa_l.left, ch_l.parent = ch_l, pa_l
+                pa_l.right, ch_r.parent = ch_r, pa_l
+                self.root = Node(m)
+                self.root.left, pa_l.parent = pa_l, self.root
+                self.root.right, parent.parent = parent, self.root
+                return
+            elif node is parent.mid:
+                pass
+            else:
+                pass
         else:
             print("node to be inserted and its parent both have two values, skipping")
         return
