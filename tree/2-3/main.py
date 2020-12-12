@@ -22,7 +22,27 @@ class Node:
 
     def __str__(self):
         return f'{self.val1}:{self.val2}' if (self.val2 is not None) else f'{self.val1}'
+
+    def align2(self, val):
+        assert(self.val2 is None)
+        self.val2 = val
+        if self.val1 > self.val2:
+            self.val1, self.val2 = self.val2, self.val1
+        return
     
+    def align3(self, val):
+        assert(self.val2 is not None)
+        if val < self.val1:
+            val1 = self.val1
+            self.val1 = val
+            return val1
+        elif val < self.val2:
+            return val
+        else:
+            val2 = self.val2
+            self.val2 = val
+            return val2
+        
 class Tree23:
     def __init__(self):
         self.root = None
@@ -47,28 +67,6 @@ class Tree23:
             self.g.edge(str(node1.viz_id), str(node2.viz_id), label=label_s)
             self.g.edge(str(node2.viz_id), str(node2.parent.viz_id), style="dashed")
             
-    def example(self):
-        node1 = Node(10, None, None, None, None)
-        node3 = Node(30, None, None, None, None)
-        node5 = Node(50, None, None, None, None)
-        node7 = Node(70, None, None, None, None)
-        node9_10 = Node(90, 100, None, None, None)
-
-        node2 = Node(20, None, node1, None, node3)
-        node1.parent = node2
-        node3.parent = node2
-        
-        node6_8 = Node(60, 80, node5, node7, node9_10)
-        node5.parent = node6_8
-        node7.parent = node6_8
-        node9_10.parent = node6_8
-        
-        node4 = Node(40, None, node2, None, node6_8)
-        node2.parent = node4
-        node6_8.parent = node4
-        
-        self.root = node4
-
     def find(self, query):
         node = self.root
         while node is not None:
@@ -89,7 +87,7 @@ class Tree23:
 
         return None
 
-    def insert(self, val):
+    def insert(self, val, aux=False):
         if self.root is None:
             self.root = Node(val)
             return
@@ -120,6 +118,13 @@ class Tree23:
             if node.val1 > node.val2:
                 node.val1, node.val2 = node.val2, node.val1
             return
+
+        if aux:
+            self._insert2(parent, val)
+        else:
+            self._insert1(parent, val)
+        
+    def _insert1(self, node, val):
         # node has two elems
         if node is self.root:
             # this happens at the very first stage
@@ -210,6 +215,29 @@ class Tree23:
             print("unexpected case")
         return
 
+    def _insert2(self, node_, val):
+        # node has two elems
+        node = node_
+        mid = val
+        while node != self.root and node.val2 != None:
+            mid = node.align3(mid)
+            node = node.parent
+
+        if node is self.root:
+            print("in _insert2, node is self.root")
+            if node.val2 is None:
+                node.align2(mid)
+            else:
+                node.align3(mid)
+            return
+        if node.val2 is None:
+            node.align2(mid)
+            print("in _insert2, node.val2 is None")
+            return
+        else:
+            print("in _insert2, else")
+            return
+        
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -262,7 +290,7 @@ if __name__ == '__main__':
             cmd = str(inputs[0])
             x = int(inputs[1])
             if cmd == 'insert':
-                tree.insert(x)
+                tree.insert(x, True)
             else:
                 print("type 'insert x'")
     
