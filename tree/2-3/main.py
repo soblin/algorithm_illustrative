@@ -243,7 +243,8 @@ class Tree23:
         
 if __name__ == '__main__':
     tree = Tree23()
-    values = random.sample(range(0, 100), 40)
+    # values = random.sample(range(0, 100), 40)
+    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
     
