@@ -42,7 +42,46 @@ class Node:
             val2 = self.val2
             self.val2 = val
             return val2
+
+    def divideAndConnect(self, node_l, node_r):
+        if self.left.val1 == node_l.val1:
+            assert(self.left.val2 == node_r.val1)
+            node1, node2, node3, node4 = node_l, node_r, self.mid, self.right
+        elif self.mid.val1 == node_l.val1:
+            assert(self.mid.val2 == node_r.val1)
+            node1, node2, node3, node4 = self.left, node_l, node_r, self.right
+        elif self.right.val1 == node_l.val1:
+            assert(self.right.val2 == node_r.val1)
+            node1, node2, node3, node4 = self.left, self.mid, node_l, node_r
+        else:
+            print("Error in divideAndConnect")
+            return
         
+        new1 = Node(self.val1, None, node1, None, node2, None)
+        new2 = Node(self.val2, None, node3, None, node4, None)
+
+        node1.parent = node2.parent = new1
+        node3.parent = node4.parent = new2
+        
+        return new1, new2
+
+    def realignNode(self, node_l, node_r):
+        if self.val2 > node_l.val1 and self.val2 > node_r.val1:
+            node1, node2, node3 = node_l, node_r, self.right
+        elif self.val1 < node_l.val1:
+            node1, node2, node3 = self.left, node_l, node_r
+        else:
+            print("Error in divideAndConnect")
+            return
+
+        self.left = node1
+        self.mid = node2
+        self.right = node3
+
+        node1.parent = node2.parent = node3.parent = self
+        
+        return
+    
 class Tree23:
     def __init__(self):
         self.root = None
@@ -219,12 +258,14 @@ class Tree23:
         # node has two elems
         node = node_
         mid = val
+        queue = deque()
         while node != self.root and node.val2 != None:
+            queue.append(node)
             mid = node.align3(mid)
             node = node.parent
 
-        if node is self.root:
-            print("in _insert2, node is self.root")
+        if node is self.root and node.val2 is not None:
+            print("in _insert2, node is self.root and node.val2 is not None")
             if node.val2 is None:
                 node.align2(mid)
             else:
@@ -232,8 +273,19 @@ class Tree23:
             return
         if node.val2 is None:
             node.align2(mid)
+            top = node
             print("in _insert2, node.val2 is None")
+            # queue.append(node)
+            node = queue.popleft()
+            node_l, node_r = Node(node.val1), Node(node.val2)
+            while len(queue) is not 0:
+                parent = queue.popleft()
+                print(f"queue.pop is {parent}")
+                node_l, node_r = parent.divideAndConnect(node_l, node_r)
+
+            top.realignNode(node_l, node_r)
             return
+        
         else:
             print("in _insert2, else")
             return
