@@ -266,11 +266,20 @@ class Tree23:
 
         if node is self.root and node.val2 is not None:
             print("in _insert2, node is self.root and node.val2 is not None")
-            if node.val2 is None:
-                node.align2(mid)
-            else:
-                node.align3(mid)
+            mid = node.align3(mid)
+            top = Node(mid)
+            queue.append(node)
+            node = queue.popleft()
+            node_l, node_r = Node(node.val1), Node(node.val2)
+            while len(queue) is not 0:
+                parent = queue.popleft()
+                node_l, node_r = parent.divideAndConnect(node_l, node_r)
+
+            top.left, top.right = node_l, node_r
+            node_l.parent = node_r.parent = top
+            self.root = top
             return
+        
         if node.val2 is None:
             node.align2(mid)
             top = node
