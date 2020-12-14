@@ -158,12 +158,6 @@ class Tree23:
                 node.val1, node.val2 = node.val2, node.val1
             return
 
-        if aux:
-            self._insert2(parent, val)
-        else:
-            self._insert1(parent, val)
-        
-    def _insert1(self, node, val):
         # node has two elems
         if node is self.root:
             # this happens at the very first stage
@@ -176,85 +170,9 @@ class Tree23:
             l.parent = r.parent = m
             return
 
-        parent = node.parent # this is not None, because node is not root
-        if parent.val2 is None:
-            l, m, r = sorted([val, node.val1, node.val2])
-            l = Node(l)
-            r = Node(r)
-            if val < parent.val1:
-                parent.val2 = m
-                if parent.val1 > parent.val2:
-                    parent.val1, parent.val2 = parent.val2, parent.val1
-                parent.left = l
-                l.parent = parent
-                parent.mid = r
-                r.parent = parent
-            else:
-                parent.val2 = m
-                parent.mid = l
-                l.parent = parent
-                parent.right = r
-                r.parent = parent
-            return
-        if parent is self.root:
-            if node is parent.left:
-                l, m, r = sorted([val, node.val1, node.val2])
-                ch_l = Node(l)
-                ch_r = Node(r)
-                l, m, r = sorted([m, parent.val1, parent.val2])
-                # make parent 1-elem node
-                parent.val1, parent.val2 = r, None
-                parent.left = parent.mid
-                parent.mid = None
-                pa_l = Node(l)
-                pa_l.left, ch_l.parent = ch_l, pa_l
-                pa_l.right, ch_r.parent = ch_r, pa_l
-                self.root = Node(m)
-                self.root.left, pa_l.parent = pa_l, self.root
-                self.root.right, parent.parent = parent, self.root
-                return
-            elif node is parent.mid:
-                l, m, r = sorted([val, node.val1, node.val2])
-                ch_l = Node(l)
-                ch_r = Node(r)
-                l, m, r = sorted([m, parent.val1, parent.val2])
-                pa_l = Node(l)
-                pa_l.left = parent.left
-                parent.left.parent = pa_l
-                pa_l.right = ch_l
-                ch_l.parent = pa_l
-                pa_r = Node(r)
-                pa_r.right = parent.right
-                parent.right.parent = pa_r
-                pa_r.left = ch_r
-                ch_r.parent = pa_r
-                self.root = Node(m)
-                self.root.left = pa_l
-                pa_l.parent = self.root
-                self.root.right = pa_r
-                pa_r.parent = self.root
-                return
-            elif node is parent.right:
-                l, m, r = sorted([val, node.val1, node.val2])
-                ch_l = Node(l)
-                ch_r = Node(r)
-                pa_r = Node(m)
-                pa_r.left, ch_l.parent = ch_l, pa_r
-                pa_r.right, ch_r.parent = ch_r, pa_r
-                parent.right = parent.mid
-                parent.mid = None
-                self.root = Node(parent.val2)
-                parent.val2 = None
-                self.root.left = parent
-                parent.parent = self.root
-                self.root.right = pa_r
-                pa_r.parent = self.root
-                return
-        else:
-            print("unexpected case")
-        return
-
-    def _insert2(self, node_, val):
+        self._insert(parent, val)
+        
+    def _insert(self, node_, val):
         # node has two elems
         node = node_
         mid = val
@@ -265,7 +183,6 @@ class Tree23:
             node = node.parent
 
         if node is self.root and node.val2 is not None:
-            print("in _insert2, node is self.root and node.val2 is not None")
             mid = node.align3(mid)
             top = Node(mid)
             queue.append(node)
@@ -283,20 +200,17 @@ class Tree23:
         if node.val2 is None:
             node.align2(mid)
             top = node
-            print("in _insert2, node.val2 is None")
-            # queue.append(node)
             node = queue.popleft()
             node_l, node_r = Node(node.val1), Node(node.val2)
             while len(queue) is not 0:
                 parent = queue.popleft()
-                print(f"queue.pop is {parent}")
                 node_l, node_r = parent.divideAndConnect(node_l, node_r)
 
             top.realignNode(node_l, node_r)
             return
         
         else:
-            print("in _insert2, else")
+            print("Error in _insert()")
             return
         
     def view(self):
@@ -332,8 +246,8 @@ class Tree23:
         
 if __name__ == '__main__':
     tree = Tree23()
-    # values = random.sample(range(0, 100), 40)
-    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    values = random.sample(range(0, 100), 50)
+    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
     
