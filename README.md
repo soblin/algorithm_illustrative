@@ -1,4 +1,4 @@
-# List of advanced data structure sand its visualization using Graphviz
+# List of advanced data structures and its visualization using Graphviz
 
 ## AVL tree
 
