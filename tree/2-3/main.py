@@ -7,6 +7,7 @@ import graphviz
 from collections import deque
 import random
 
+
 class Node:
     def __init__(self, val1, val2=None, left=None, mid=None, right=None, parent=None):
         self.val1 = val1
@@ -23,13 +24,19 @@ class Node:
     def __str__(self):
         return f'{self.val1}:{self.val2}' if (self.val2 is not None) else f'{self.val1}'
 
+    def is_2(self):
+        return self.val2 is None
+
+    def is_3(self):
+        return self.val2 is not None
+
     def align2(self, val):
         assert(self.val2 is None)
         self.val2 = val
         if self.val1 > self.val2:
             self.val1, self.val2 = self.val2, self.val1
         return
-    
+
     def align3(self, val):
         assert(self.val2 is not None)
         if val < self.val1:
@@ -54,15 +61,15 @@ class Node:
             assert(self.right.val2 == node_r.val1)
             node1, node2, node3, node4 = self.left, self.mid, node_l, node_r
         else:
-            print("Error in divideAndConnect")
-            return
-        
+            raise Exception(
+                "divideAndConnect has been called for non-parent node")
+
         new1 = Node(self.val1, None, node1, None, node2, None)
         new2 = Node(self.val2, None, node3, None, node4, None)
 
         node1.parent = node2.parent = new1
         node3.parent = node4.parent = new2
-        
+
         return new1, new2
 
     def realignNode(self, node_l, node_r):
@@ -71,23 +78,41 @@ class Node:
         elif self.val1 < node_l.val1:
             node1, node2, node3 = self.left, node_l, node_r
         else:
-            print("Error in divideAndConnect")
-            return
+            raise Exception("realignNode has wrong node_l and node_r values")
 
         self.left = node1
         self.mid = node2
         self.right = node3
 
         node1.parent = node2.parent = node3.parent = self
-        
+
         return
-    
+
+    def successor(self, val2):
+        if self.is_2():
+            node = self.right
+        elif self.is_3():
+            if val2:
+                node = self.right
+            else:
+                node = self.mid
+        else:
+            raise Exception("successor() is wrong")
+
+        parent = None
+        while node is not None:
+            parent = node
+            node = node.left
+
+        return parent
+
+
 class Tree23:
     def __init__(self):
         self.root = None
         self.g = None
         self.viz_index = 0
-        
+
     def vis_node(self, node):
         if node.val2 is None:
             self.g.node(str(node.viz_id), label=f'{node.val1}', shape='square')
@@ -97,15 +122,17 @@ class Tree23:
     def vis_edge(self, node1, node2):
         if node1.is_leaf():
             return
-        
+
         label_s = f'{node1.val1}:{node1.val2}' if (node1.val2 is not None) else f'{node1.val1}'
         if node2 is None:
             self.g.node(str(self.viz_index), shape="point")
-            self.g.edge(str(node1.viz_id), str(self.viz_index), style="dashed", label=label_s)
+            self.g.edge(str(node1.viz_id), str(self.viz_index),
+                        style="dashed", label=label_s)
         else:
             self.g.edge(str(node1.viz_id), str(node2.viz_id), label=label_s)
-            self.g.edge(str(node2.viz_id), str(node2.parent.viz_id), style="dashed")
-            
+            self.g.edge(str(node2.viz_id), str(
+                node2.parent.viz_id), style="dashed")
+
     def find(self, query):
         node = self.root
         while node is not None:
@@ -130,7 +157,7 @@ class Tree23:
         if self.root is None:
             self.root = Node(val)
             return
-        
+
         node = self.root
         parent = None
         while node is not None:
@@ -171,7 +198,7 @@ class Tree23:
             return
 
         self._insert(parent, val)
-        
+
     def _insert(self, node_, val):
         # node has two elems
         node = node_
@@ -196,7 +223,7 @@ class Tree23:
             node_l.parent = node_r.parent = top
             self.root = top
             return
-        
+
         if node.val2 is None:
             node.align2(mid)
             top = node
@@ -208,10 +235,42 @@ class Tree23:
 
             top.realignNode(node_l, node_r)
             return
-        
+
         else:
-            print("Error in _insert()")
+            raise Exception("Tree23._insert() has unexpected argument node_")
             return
+
+    def delete(self, val):
+        find = self.find(val)
+        if not find:
+            return
+
+        delete = find
+        if not find.is_leaf():
+            suc = find.successor(val is find.val2)
+            print(f"Tree23.delete(), suc is {suc}")
+            if find.is_2():
+                find.val1, suc.val1 = suc.val1, find.val1,
+                delete = suc
+            elif find.is_3():
+                if val is find.val1:
+                    find.val1, suc.val1 = suc.val1, find.val1
+                elif find.val2 and val is find.val2:
+                    find.val2, suc.val1 = suc.val1, find.val2
+                delete = suc
+
+        # delete `delete`. `delete` is leaf
+        if delete.is_3():
+            if val is delete.val2:
+                delete.val2 = None
+                return
+            else:
+                delete.val1 = delete.val2
+                delete.val2 = None
+                return
+
+        else:
+            print("delete is 2 node")
         
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
@@ -247,7 +306,7 @@ class Tree23:
 if __name__ == '__main__':
     tree = Tree23()
     values = random.sample(range(0, 100), 50)
-    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
     
@@ -256,7 +315,7 @@ if __name__ == '__main__':
         if len(inputs) == 1:
             cmd = str(inputs[0])
             if cmd == 'q' or cmd == 'quit':
-                exit()
+                break
             elif cmd == 'view':
                 tree.view()
             else:
