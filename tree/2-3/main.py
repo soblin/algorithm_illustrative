@@ -287,6 +287,22 @@ class Tree23:
             self.redistribute(delete.parent, delete)
 
         # `delete` and parent(is_2) are both single
+        # if sibling is 2-elem
+        if delete.sibling().is_3():
+            parent = delete.parent
+            if delete is parent.right:
+                delete.val1 = parent.val1
+                parent.val1 = parent.left.val2
+                parent.left.val2 = None
+                return
+            else:
+                assert(delete is parent.left)
+                right = parent.right
+                delete.val1 = parent.val1
+                parent.val1 = right.val1
+                right.val1, right.val2 = right.val2, None
+                return
+
         node = delete.parent
         if delete is node.right:
             node.val1, node.val2 = node.left.val1, node.val1
@@ -340,8 +356,14 @@ class Tree23:
         assert(node.is_3())
         while True:
             parent = node.parent
-            if parent.is_3() or parent is None or node.sibling().is_3():
-                print("rebalance broken!")
+            if node is self.root:
+                print("rebalance returned: node is self.root")
+                return
+            if parent.is_3():
+                print("rebalance finished: node is parent.is_3()")
+                break
+            if node.sibling().is_3():
+                print("rebalance finished: node.sibling().is_3()")
                 break
 
             node = self.merge(parent, node)
@@ -364,7 +386,7 @@ class Tree23:
             node.mid, node_l.parent = node_l, node
             node.right, node_r.parent = node_r, node
             return node
-    
+
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -401,9 +423,9 @@ if __name__ == '__main__':
     tree = Tree23()
     size = 100
     # values = random.sample(range(0, 200), size)
-    values = range(100)
-    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
-    #           25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    # values = range(100)
+    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
+              25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
 
