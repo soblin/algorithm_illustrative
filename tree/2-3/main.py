@@ -153,7 +153,7 @@ class Tree23:
 
         return None
 
-    def insert(self, val, aux=False):
+    def insert(self, val):
         if self.root is None:
             self.root = Node(val)
             return
@@ -269,9 +269,54 @@ class Tree23:
                 delete.val2 = None
                 return
 
-        else:
-            print("delete is 2 node")
+        if delete is self.root:
+            self.root = None
+
+        # `delete` is single node and parent is 2-elem node
+        if delete.parent.is_3():
+            # redistribution
+            self.redistribute(delete.parent, delete)
+
+        # `delete` and parent are both single
         
+    def redistribute(self, node, delete):
+        assert(node.is_3() and delete.is_leaf())
+        if delete is node.left:
+            if node.mid.val2 is not None:
+                delete.val1 = node.val1
+                node.val1 = node.mid.val1
+                node.mid.val1 = node.mid.val2
+                node.mid.val2 = None
+                return
+            else:
+                delete.val1, delete.val2 = node.val1, node.mid.val1
+                node.val1, node.val2 = node.val2, None
+                node.mid = None
+                return
+        elif delete is node.mid:
+            if node.left.val2 is not None:
+                delete.val1 = node.val1
+                node.val1 = node.left.val2
+                node.left.val2 = None
+                return
+            else:
+                node.left.val2 = node.val1
+                node.val1, node.val2 = node.val2, None
+                node.mid = None
+                return
+        else:
+            assert(delete is node.right)
+            if node.mid.val2 is not None:
+                delete.val1, delete.val2 = node.val2, None
+                node.val2 = node.mid.val2
+                node.mid.val2 = None
+                return
+            else:
+                delete.val1, delete.val2 = node.mid.val1, node.val2
+                node.val2 = None
+                node.mid = None
+                return
+
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -300,16 +345,18 @@ class Tree23:
                 node.right.viz_id = self.viz_index
                 queue.append(node.right)
             self.vis_edge(node, node.right)
-            
+
         self.g.view()
-        
+
+
 if __name__ == '__main__':
     tree = Tree23()
     values = random.sample(range(0, 100), 50)
-    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24, 25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
+              25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
-    
+
     while True:
         inputs = list(input().split())
         if len(inputs) == 1:
@@ -324,7 +371,8 @@ if __name__ == '__main__':
             cmd = str(inputs[0])
             x = int(inputs[1])
             if cmd == 'insert':
-                tree.insert(x, True)
+                tree.insert(x)
+            elif cmd == 'delete':
+                tree.delete(x)
             else:
-                print("type 'insert x'")
-    
+                print("type 'insert x' or 'delete x'")
