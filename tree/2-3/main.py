@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # https://graphviz.readthedocs.io/en/stable/examples.html
+# https://www.slideshare.net/sandpoonia/23-tree
+# http://www.nct9.ne.jp/m_hiroi/light/pyalgo15.html
 
 import sys
 input = sys.stdin.readline
@@ -29,6 +31,13 @@ class Node:
 
     def is_3(self):
         return self.val2 is not None
+
+    def sibling(self):
+        assert(self.parent.is_2())
+        if self is self.parent.left:
+            return self.parent.right
+        else:
+            return self.parent.left
 
     def align2(self, val):
         assert(self.val2 is None)
@@ -277,8 +286,18 @@ class Tree23:
             # redistribution
             self.redistribute(delete.parent, delete)
 
-        # `delete` and parent are both single
-        
+        # `delete` and parent(is_2) are both single
+        node = delete.parent
+        if delete is node.right:
+            node.val1, node.val2 = node.left.val1, node.val1
+            node.left = node.mid = node.right = None
+        else:
+            assert(delete is node.left)
+            node.val2 = node.right.val1
+            node.left = node.mid = node.right = None
+
+        self.rebalance(node)
+
     def redistribute(self, node, delete):
         assert(node.is_3() and delete.is_leaf())
         if delete is node.left:
@@ -317,6 +336,35 @@ class Tree23:
                 node.mid = None
                 return
 
+    def rebalance(self, node):
+        assert(node.is_3())
+        while True:
+            parent = node.parent
+            if parent.is_3() or parent is None or node.sibling().is_3():
+                print("rebalance broken!")
+                break
+
+            node = self.merge(parent, node)
+
+    def merge(self, node, child2):
+        assert(child2.parent is node)
+        # child2 is 2-elem, and node & sibling are both single
+        # merge node and sibling
+        if child2 is node.right:
+            assert(node.left.is_2())
+            node.val1, node.val2 = node.left.val1, node.val1
+            node_l, node_r = node.left.left, node.left.right
+            node.left, node_l.parent = node_l, node
+            node.mid, node_r.parent = node_r, node
+            return node
+        else:
+            assert(child2 is node.left and node.right.is_2())
+            node.val2 = node.right.val1
+            node_l, node_r = node.right.left, node.right.right
+            node.mid, node_l.parent = node_l, node
+            node.right, node_r.parent = node_r, node
+            return node
+    
     def view(self):
         self.g = graphviz.Digraph('structs', node_attr={'shape': 'record'})
         queue = deque()
@@ -351,11 +399,17 @@ class Tree23:
 
 if __name__ == '__main__':
     tree = Tree23()
-    values = random.sample(range(0, 100), 50)
-    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
-              25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    size = 100
+    # values = random.sample(range(0, 200), size)
+    values = range(100)
+    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
+    #           25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
+
+    #deletes = random.sample(values, int(size/2))
+    # for i in deletes:
+    #    tree.delete(i)
 
     while True:
         inputs = list(input().split())
