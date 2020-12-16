@@ -280,11 +280,13 @@ class Tree23:
 
         if delete is self.root:
             self.root = None
+            return
 
         # `delete` is single node and parent is 2-elem node
         if delete.parent.is_3():
             # redistribution
             self.redistribute(delete.parent, delete)
+            return
 
         # `delete` and parent(is_2) are both single
         # if sibling is 2-elem
@@ -303,6 +305,7 @@ class Tree23:
                 right.val1, right.val2 = right.val2, None
                 return
 
+        # `delete`, its parent, and its sibling are all single node
         node = delete.parent
         if delete is node.right:
             node.val1, node.val2 = node.left.val1, node.val1
@@ -360,13 +363,45 @@ class Tree23:
                 print("rebalance returned: node is self.root")
                 return
             if parent.is_3():
-                print("rebalance finished: node is parent.is_3()")
+                print("rebalance finished: parent.is_3()")
                 break
             if node.sibling().is_3():
                 print("rebalance finished: node.sibling().is_3()")
                 break
 
             node = self.merge(parent, node)
+
+        if parent.is_3():
+            print("Not implemented")
+            return
+
+        if node.sibling().is_3():
+            parent = node.parent
+            if node is parent.right:
+                sibling = parent.left
+                node_l, node_m, node_r = sibling.left, sibling.mid, sibling.right
+                new_r = Node(parent.val1)
+                parent.right, new_r.parent = new_r, parent
+                new_r.left, node_r.parent = node_r, new_r
+                new_r.right, node.parent = node, new_r
+                parent.val1 = sibling.val2
+                sibling.val2 = None
+                sibling.right, sibling.mid = sibling.mid, None
+                print("node.sibling().is_3() done.")
+                return
+            else:
+                assert(node is parent.left)
+                sibling = node.right
+                node_l, node_m, node_r = sibling.left, sibling.mid, sibling.right
+                new_l = Node(parent.val1)
+                parent.left, new_l.parent = new_l, parent
+                new_l.left, node.parent = node, new_l
+                new_l.right, node_l.parent = node_l, new_l
+                parent.val1 = sibling.val1
+                sibling.val1, sibling.val2 = sibling.val2, None
+                sibling.left, sibling.mid = sibling.mid, None
+                print("node.sibling().is_3() done.")
+                return
 
     def merge(self, node, child2):
         assert(child2.parent is node)
@@ -422,10 +457,10 @@ class Tree23:
 if __name__ == '__main__':
     tree = Tree23()
     size = 100
-    # values = random.sample(range(0, 200), size)
+    values = random.sample(range(0, 200), size)
     # values = range(100)
-    values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
-              25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
+    #          25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
     for i in values:
         tree.insert(i)
 
