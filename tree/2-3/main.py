@@ -257,7 +257,6 @@ class Tree23:
         delete = find
         if not find.is_leaf():
             suc = find.successor(val is find.val2)
-            print(f"Tree23.delete(), suc is {suc}")
             if find.is_2():
                 find.val1, suc.val1 = suc.val1, find.val1,
                 delete = suc
@@ -360,20 +359,77 @@ class Tree23:
         while True:
             parent = node.parent
             if node is self.root:
-                print("rebalance returned: node is self.root")
                 return
             if parent.is_3():
-                print("rebalance finished: parent.is_3()")
                 break
             if node.sibling().is_3():
-                print("rebalance finished: node.sibling().is_3()")
                 break
 
             node = self.merge(parent, node)
 
         if parent.is_3():
-            print("Not implemented")
-            return
+            if node is parent.left:
+                mid = parent.mid
+                if mid.is_3():
+                    new_l = Node(parent.val1)
+                    node_l, node_m, node_r = mid.left, mid.mid, mid.right
+                    parent.val1 = mid.val1
+                    mid.val1, mid.val2 = mid.val2, None
+                    mid.left, mid.mid, mid.right = node_m, None, node_r
+                    parent.left, new_l.parent = new_l, parent
+                    new_l.left, node.parent = node, new_l
+                    new_l.right, node_l.parent = node_l, new_l
+                    return
+                if mid.is_2():
+                    mid.right, mid.mid = mid.right, mid.left
+                    mid.val1, mid.val2 = parent.val1, mid.val1
+                    mid.left, node.parent = node, mid
+                    parent.val1, parent.val2 = parent.val2, None
+                    parent.left, parent.mid = parent.mid, None
+                    return
+
+            elif node is parent.mid:
+                right = parent.right
+                if right.is_3():
+                    node_l, node_m, node_r = right.left, right.mid, right.right
+                    new_m = Node(parent.val2)
+                    parent.val2 = right.val1
+                    right.val1, right.val2 = right.val2, None
+                    right.left, right.mid, right.right = node_m, None, node_r
+                    parent.mid, new_m.parent = new_m, parent
+                    new_m.left, node.parent = node, new_m
+                    new_m.right, node_l.parent = node_l, new_m
+                    return
+                if right.is_2():
+                    right.right, right.mid = right.right, right.left
+                    right.left, node.parent = node, right
+                    right.val1, right.val2 = parent.val2, right.val1
+                    parent.val2 = None
+                    parent.mid = None
+                    return
+
+            elif node is parent.right:
+                mid = parent.mid
+                if mid.is_3():
+                    node_l, node_m, node_r = mid.left, mid.mid, mid.right
+                    new_r = Node(parent.val2)
+                    parent.val2 = mid.val2
+                    mid.val2 = None
+                    parent.right, new_r.parent = new_r, parent
+                    mid.mid, mid.right = None, node_m
+                    new_r.right, node.parent = node, new_r
+                    new_r.left, node_r.parent = node_r, new_r
+                    return
+                if mid.is_2():
+                    mid.mid = mid.right
+                    mid.right, node.parent = node, mid
+                    mid.val2 = parent.val2
+                    parent.val2 = None
+                    parent.right, parent.mid = parent.mid, None
+                    return
+            else:
+                print("Unexpected case in parent.is_3()")
+                return
 
         if node.sibling().is_3():
             parent = node.parent
@@ -387,11 +443,10 @@ class Tree23:
                 parent.val1 = sibling.val2
                 sibling.val2 = None
                 sibling.right, sibling.mid = sibling.mid, None
-                print("node.sibling().is_3() done.")
                 return
             else:
                 assert(node is parent.left)
-                sibling = node.right
+                sibling = parent.right
                 node_l, node_m, node_r = sibling.left, sibling.mid, sibling.right
                 new_l = Node(parent.val1)
                 parent.left, new_l.parent = new_l, parent
@@ -400,7 +455,6 @@ class Tree23:
                 parent.val1 = sibling.val1
                 sibling.val1, sibling.val2 = sibling.val2, None
                 sibling.left, sibling.mid = sibling.mid, None
-                print("node.sibling().is_3() done.")
                 return
 
     def merge(self, node, child2):
@@ -454,19 +508,26 @@ class Tree23:
         self.g.view()
 
 
-if __name__ == '__main__':
+def main():
     tree = Tree23()
     size = 100
     values = random.sample(range(0, 200), size)
-    # values = range(100)
-    # values = [27, 5, 21, 65, 96, 1, 2, 14, 15, 24,
-    #          25, 55, 56, 68, 70, 97, 98, 22, 0, 3, 16]
+
+    deletes = random.sample(values, int(size*3/4))
+
+    with open('inputs.txt', 'w') as f:
+        for i in values:
+            f.write(str(i) + '\n')
+
+    with open('deletes.txt', 'w') as f:
+        for i in deletes:
+            f.write(str(i) + '\n')
+
     for i in values:
         tree.insert(i)
 
-    #deletes = random.sample(values, int(size/2))
-    # for i in deletes:
-    #    tree.delete(i)
+    for i in deletes:
+        tree.delete(i)
 
     while True:
         inputs = list(input().split())
@@ -487,3 +548,41 @@ if __name__ == '__main__':
                 tree.delete(x)
             else:
                 print("type 'insert x' or 'delete x'")
+
+
+def debug():
+    tree = Tree23()
+    with open('inputs_example.txt') as f:
+        for s in f:
+            tree.insert(int(s))
+
+    with open('deletes_example.txt') as f:
+        for s in f:
+            tree.delete(int(s))
+
+    while True:
+        inputs = list(input().split())
+        if len(inputs) == 1:
+            cmd = str(inputs[0])
+            if cmd == 'q' or cmd == 'quit':
+                break
+            elif cmd == 'view':
+                tree.view()
+            else:
+                print("type 'q' or 'quit' or 'view'")
+        elif len(inputs) == 2:
+            cmd = str(inputs[0])
+            x = int(inputs[1])
+            if cmd == 'insert':
+                tree.insert(x)
+            elif cmd == 'delete':
+                tree.delete(x)
+            else:
+                print("type 'insert x' or 'delete x'")
+
+    return
+
+
+if __name__ == '__main__':
+    main()
+    # debug()
